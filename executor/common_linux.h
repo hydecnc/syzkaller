@@ -4613,6 +4613,10 @@ static void drop_caps(void)
 }
 #endif
 
+#if SYZ_EXECUTOR || SYZ_NVIDIA
+#include "syz_nvidia.h"
+#endif
+
 #if SYZ_EXECUTOR || SYZ_SANDBOX_NONE
 #include <sched.h>
 #include <sys/types.h>

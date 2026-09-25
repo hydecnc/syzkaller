@@ -36,6 +36,7 @@ func defaultFeatures(value bool) Features {
 		"ieee802154":  {"setup and use mac802154_hwsim for emulation", value},
 		"sysctl":      {"setup sysctl's for fuzzing", value},
 		"swap":        {"setup and use a swap file", value},
+		"nvidia":      {"setup nvidia GPU driver fuzzing", value},
 	}
 }
 
@@ -101,6 +102,9 @@ func FeaturesToFlags(features flatrpc.Feature, manual Features) flatrpc.ExecEnv 
 	}
 	if manual == nil || manual["close_fds"].Enabled {
 		flags |= flatrpc.ExecEnvEnableCloseFds
+	}
+	if manual != nil && manual["nvidia"].Enabled {
+		flags |= flatrpc.ExecEnvEnableNvidia
 	}
 	if features&flatrpc.FeatureExtraCoverage != 0 {
 		flags |= flatrpc.ExecEnvExtraCover

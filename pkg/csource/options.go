@@ -44,6 +44,8 @@ type Options struct {
 	Sysctl        bool `json:"sysctl,omitempty"`
 	Swap          bool `json:"swap,omitempty"`
 
+	Nvidia        bool `json:"nvidia,omitempty"`
+
 	UseTmpDir  bool `json:"tmpdir,omitempty"`
 	HandleSegv bool `json:"segv,omitempty"`
 
@@ -151,6 +153,7 @@ func (opts Options) checkLinuxOnly(OS string) error {
 		"Leak":          &opts.Leak,
 		"Sysctl":        &opts.Sysctl,
 		"Swap":          &opts.Swap,
+		"Nvidia":        &opts.Nvidia,
 	} {
 		if *opt {
 			return fmt.Errorf("option %v is not supported on %v", name, OS)
@@ -185,6 +188,7 @@ func DefaultOpts(cfg *mgrconfig.Config) Options {
 		opts.IEEE802154 = true
 		opts.Sysctl = true
 		opts.Swap = true
+		opts.Nvidia = true
 	}
 	if cfg.Sandbox == "" || cfg.Sandbox == "setuid" {
 		opts.NetReset = false

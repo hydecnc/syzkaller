@@ -114,6 +114,7 @@ endif
 all: host target
 host: manager repro mutate prog2c db upgrade
 target: execprog executor check_syzos
+nvidia: host execprog executor_nvidia
 
 executor: descriptions
 ifeq ($(TARGETOS),fuchsia)
@@ -136,6 +137,33 @@ else
 	$(CXX) -o ./bin/$(TARGETOS)_$(TARGETARCH)/syz-executor$(EXE) executor/executor.cc \
 		$(ADDCXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -DGOOS_$(TARGETOS)=1 -DGOARCH_$(TARGETARCH)=1 \
 		-DHOSTGOOS_$(HOSTOS)=1 -DGIT_REVISION=\"$(REV)\"
+endif
+endif
+endif
+
+executor_nvidia: descriptions
+ifeq ($(TARGETOS),fuchsia)
+	# Dont build syz-executor for fuchsia.
+else
+ifneq ("$(BUILDOS)", "$(NATIVEBUILDOS)")
+	$(info ************************************************************************************)
+	$(info Executor will not be built)
+	$(info Building executor for ${TARGETOS} is not supported on ${BUILDOS})
+	$(info ************************************************************************************)
+else
+ifneq ("$(NO_CROSS_COMPILER)", "")
+	$(info ************************************************************************************)
+	$(info Executor will not be built)
+	$(info Native cross-compiler is missing/broken:)
+	$(info $(NO_CROSS_COMPILER))
+	$(info ************************************************************************************)
+else
+	mkdir -p ./bin/$(TARGETOS)_$(TARGETARCH)
+	$(CC) $(ADDCXXFLAGS) -o ./bin/$(TARGETOS)_$(TARGETARCH)/syz-executor$(EXE) \
+		executor/executor.cc $(GPU_INSTRUMENTATION_SRCS) \
+		$(CFLAGS) -DGOOS_$(TARGETOS)=1 -DGOARCH_$(TARGETARCH)=1 \
+		-DHOSTGOOS_$(HOSTOS)=1 -DGIT_REVISION=\"$(REV)\" -DSYZ_EXECUTOR=1 -DSYZ_EXECUTOR_NVIDIA=1 \
+		-I/usr/local/cuda-13.4/include -lcuda -L/usr/local/cuda/lib64/ -lstdc++
 endif
 endif
 endif
