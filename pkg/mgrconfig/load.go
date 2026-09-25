@@ -176,6 +176,11 @@ func Complete(cfg *Config) error {
 	default:
 		return fmt.Errorf("config param sandbox must contain one of none/setuid/namespace/android")
 	}
+	switch cfg.GPUVendor {
+	case "", "nvidia":
+	default:
+		return fmt.Errorf("config param gpu_vendor must be empty or nvidia")
+	}
 	if err := cfg.checkSSHParams(); err != nil {
 		return err
 	}

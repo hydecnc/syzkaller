@@ -19,6 +19,14 @@ import (
 func (linux) syscallCheck(ctx *checkContext, call *prog.Syscall) string {
 	check := linuxSyscallChecks[call.CallName]
 	if check == nil {
+		for _, r := range linuxSyscallChecksPrefix {
+			if strings.HasPrefix(call.CallName, r.prefix) {
+				check = r.check
+				break
+			}
+		}
+	}
+	if check == nil {
 		check = func(ctx *checkContext, call *prog.Syscall) string {
 			// Execute plain syscall (rather than a variation with $) to make test program
 			// deduplication effective. However, if the plain syscall does not exist take
@@ -112,6 +120,13 @@ var linuxSyscallChecks = map[string]func(*checkContext, *prog.Syscall) string{
 	"syz_pidfd_open":                alwaysSupported,
 	"syz_create_resource":           alwaysSupported,
 	"syz_kfuzztest_run":             alwaysSupported,
+}
+
+var linuxSyscallChecksPrefix = []struct {
+	prefix string
+	check  func(*checkContext, *prog.Syscall) string
+}{
+	{"syz_cu", linuxSyzCudaSupported},
 }
 
 func linuxSyzOpenDevSupported(ctx *checkContext, call *prog.Syscall) string {
@@ -358,6 +373,10 @@ func linuxRequireKernel(ctx *checkContext, major, minor int) string {
 		return fmt.Sprintf("kernel %v.%v required, have %s", major, minor, data)
 	}
 	return ""
+}
+
+func linuxSyzCudaSupported(ctx *checkContext, call *prog.Syscall) string {
+	return ctx.rootCanOpen("/dev/nvidiactl")
 }
 
 var kernelVersionRe = regexp.MustCompile(` ([0-9]+)\.([0-9]+)\.`)

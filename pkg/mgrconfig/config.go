@@ -237,6 +237,9 @@ type Config struct {
 	// Experimental options.
 	Experimental Experimental
 
+	// StepStone options
+	GPUVendor string `json:"gpu_vendor"`
+
 	// Implementation details beyond this point. Filled after parsing.
 	Derived `json:"-"`
 }

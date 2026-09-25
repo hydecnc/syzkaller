@@ -520,6 +520,9 @@ func ExecprogCmd(execprog, executor, OS, arch, vmArch, vmType string, opts csour
 		if vmArch != "" && vmArch != arch {
 			optFlags = append(optFlags, tool.Flag{Name: "vmarch", Value: vmArch})
 		}
+		if !opts.Nvidia {
+			optFlags = append(optFlags, tool.Flag{Name: "disable", Value: "nvidia"})
+		}
 		optionalArg += " " + tool.OptionalFlags(optFlags)
 	}
 	coverArg := ""

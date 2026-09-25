@@ -477,6 +477,9 @@ func DefaultExecOpts(cfg *mgrconfig.Config, features flatrpc.Feature, debug bool
 	if cfg.Cover {
 		env |= flatrpc.ExecEnvSignal
 	}
+	if cfg.GPUVendor == "nvidia" {
+		env |= flatrpc.ExecEnvEnableNvidia
+	}
 	sandbox, err := flatrpc.SandboxToFlags(cfg.Sandbox)
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse sandbox: %v", err))

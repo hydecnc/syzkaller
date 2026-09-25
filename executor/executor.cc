@@ -272,6 +272,7 @@ static bool flag_devlink_pci;
 static bool flag_nic_vf;
 static bool flag_vhci_injection;
 static bool flag_wifi;
+static bool flag_nvidia;
 static bool flag_delay_kcov_mmap;
 static bool flag_return_error;
 
@@ -851,6 +852,7 @@ void parse_handshake(const handshake_req& req)
 	flag_wifi = (bool)(req.flags & rpc::ExecEnv::EnableWifi);
 	flag_delay_kcov_mmap = (bool)(req.flags & rpc::ExecEnv::DelayKcovMmap);
 	flag_nic_vf = (bool)(req.flags & rpc::ExecEnv::EnableNicVF);
+	flag_nvidia = (bool)(req.flags & rpc::ExecEnv::EnableNvidia);
 	flag_return_error = req.return_error;
 }
 
@@ -968,6 +970,10 @@ void execute_one()
 		if (flag_extra_coverage)
 			cover_reset(&extra_cov);
 	}
+
+#if SYZ_EXECUTOR_NVIDIA || SYZ_NVIDIA
+	setup_nvidia_driver();
+#endif
 
 	int call_index = 0;
 	uint64 prog_extra_timeout = 0;

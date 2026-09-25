@@ -139,6 +139,9 @@ func main() {
 	if *flagCoverFile == "" {
 		exec |= flatrpc.ExecFlagDedupCover
 	}
+	if featureFlags["nvidia"].Enabled {
+		env |= flatrpc.ExecEnvEnableNvidia
+	}
 
 	progs := loadPrograms(target, flag.Args())
 	if *flagGlob == "" && !*flagStress && len(progs) == 0 {

@@ -4511,10 +4511,13 @@ static void sandbox_common()
 #if SYZ_EXECUTOR
 	rlim.rlim_cur = rlim.rlim_max = (200 << 20) +
 					(kMaxThreads * kCoverSize + kExtraCoverSize) * sizeof(void*);
+	// CUDA reserves far more virtual address space than this limit allows, so cuInit fails under it.
+	if (!flag_nvidia)
+		setrlimit(RLIMIT_AS, &rlim);
 #else
 	rlim.rlim_cur = rlim.rlim_max = (200 << 20);
-#endif
 	setrlimit(RLIMIT_AS, &rlim);
+#endif
 	rlim.rlim_cur = rlim.rlim_max = 32 << 20;
 	setrlimit(RLIMIT_MEMLOCK, &rlim);
 	rlim.rlim_cur = rlim.rlim_max = 136 << 20;
@@ -4614,6 +4617,10 @@ static void drop_caps(void)
 }
 #endif
 
+#if SYZ_EXECUTOR || SYZ_NVIDIA
+#include "syz_nvidia.h"
+#endif
+
 #if SYZ_EXECUTOR || SYZ_SANDBOX_NONE
 #include <sched.h>
 #include <sys/types.h>
@@ -4658,7 +4665,13 @@ static int do_sandbox_none(void)
 #if SYZ_EXECUTOR || SYZ_WIFI
 	initialize_wifi_devices();
 #endif
+#if SYZ_EXECUTOR
+	// libcuda loads its PTX JIT compiler library at run time, which fails inside the tmpfs root.
+	if (!flag_nvidia)
+		sandbox_common_mount_tmpfs();
+#else
 	sandbox_common_mount_tmpfs();
+#endif
 	loop();
 	doexit(1);
 }

@@ -862,10 +862,10 @@ func (comp *compiler) checkConstructors() {
 				comp.error(n.Pos, "resource %v can't be created"+
 					" (never mentioned as a syscall return value or output argument/field)", name)
 			}
-			if !inputs[name] {
-				comp.error(n.Pos, "resource %v is never used as an input"+
-					" (such resources are not useful)", name)
-			}
+			// if !inputs[name] {
+			// 	comp.error(n.Pos, "resource %v is never used as an input"+
+			// 		" (such resources are not useful)", name)
+			// }
 		}
 	}
 }

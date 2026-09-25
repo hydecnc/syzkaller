@@ -580,12 +580,13 @@ enum class ExecEnv : uint64_t {
   EnableWifi = 65536ULL,
   DelayKcovMmap = 131072ULL,
   EnableNicVF = 262144ULL,
+  EnableNvidia = 524288ULL,
   NONE = 0,
-  ANY = 524287ULL
+  ANY = 1048575ULL
 };
 FLATBUFFERS_DEFINE_BITMASK_OPERATORS(ExecEnv, uint64_t)
 
-inline const ExecEnv (&EnumValuesExecEnv())[19] {
+inline const ExecEnv (&EnumValuesExecEnv())[20] {
   static const ExecEnv values[] = {
     ExecEnv::Debug,
     ExecEnv::Signal,
@@ -605,7 +606,8 @@ inline const ExecEnv (&EnumValuesExecEnv())[19] {
     ExecEnv::EnableVhciInjection,
     ExecEnv::EnableWifi,
     ExecEnv::DelayKcovMmap,
-    ExecEnv::EnableNicVF
+    ExecEnv::EnableNicVF,
+    ExecEnv::EnableNvidia
   };
   return values;
 }
@@ -631,6 +633,7 @@ inline const char *EnumNameExecEnv(ExecEnv e) {
     case ExecEnv::EnableWifi: return "EnableWifi";
     case ExecEnv::DelayKcovMmap: return "DelayKcovMmap";
     case ExecEnv::EnableNicVF: return "EnableNicVF";
+    case ExecEnv::EnableNvidia: return "EnableNvidia";
     default: return "";
   }
 }
