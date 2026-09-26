@@ -156,12 +156,10 @@ CUDA_API(cuDevicePrimaryCtxGetState, (int dev, unsigned int* flag, int* active),
 
 // Context Management
 #if SYZ_EXECUTOR || __NR_syz_cuCtxCreate
-CUDA_API(cuCtxCreate, (CUcontext * pctx, unsigned int flags, int dev), (pctx, flags, dev))
+CUDA_API(cuCtxCreate, (CUcontext * pctx, unsigned int flags, int dev), (pctx, nullptr, flags, dev))
 #endif
 
-#if SYZ_EXECUTOR || __NR_syz_cuCtxCreate_v3
-CUDA_API(cuCtxCreate_v3, (CUcontext * pctx, CUexecAffinityParam* paramsArray, int numParams, unsigned int flags, int dev), (pctx, paramsArray, numParams, flags, dev))
-#endif
+// CUDA_API(cuCtxCreate_v3, (CUcontext * pctx, CUexecAffinityParam* paramsArray, int numParams, unsigned int flags, int dev), (pctx, paramsArray, numParams, flags, dev))
 
 #if SYZ_EXECUTOR || __NR_syz_cuCtxDestroy
 CUDA_API(cuCtxDestroy, (CUcontext ctx), (ctx))
@@ -808,7 +806,15 @@ CUDA_API(cuMulticastUnbind, (CUmemGenericAllocationHandle mcHandle, int dev, siz
 #endif
 
 // Unified addressing management
-#if SYZ_EXECUTOR || __NR_syz_cuMemAdvise
+#if (SYZ_EXECUTOR || __NR_syz_cuMemAdvise) && SYZ_EXECUTOR_NVIDIA
+static CUresult syz_cuMemAdvise(CUdeviceptr devPtr, size_t count, CUmem_advise advice, int device)
+{
+	CUmemLocation location;
+	location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+	location.id = device;
+	return cuMemAdvise(devPtr, count, advice, location);
+}
+#else
 CUDA_API(cuMemAdvise, (CUdeviceptr devPtr, size_t count, CUmem_advise advice, int device), (devPtr, count, advice, device))
 #endif
 
@@ -816,7 +822,15 @@ CUDA_API(cuMemAdvise, (CUdeviceptr devPtr, size_t count, CUmem_advise advice, in
 CUDA_API(cuMemAdvise_v2, (CUdeviceptr devPtr, size_t count, CUmem_advise advice, CUmemLocation location), (devPtr, count, advice, location))
 #endif
 
-#if SYZ_EXECUTOR || __NR_syz_cuMemPrefetchAsync
+#if (SYZ_EXECUTOR || __NR_syz_cuMemPrefetchAsync) && SYZ_EXECUTOR_NVIDIA
+static CUresult syz_cuMemPrefetchAsync(CUdeviceptr devPtr, size_t count, int dstDevice, CUstream hStream)
+{
+	CUmemLocation location;
+	location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+	location.id = dstDevice;
+	return cuMemPrefetchAsync(devPtr, count, location, 0, hStream);
+}
+#else
 CUDA_API(cuMemPrefetchAsync, (CUdeviceptr devPtr, size_t count, int dstDevice, CUstream hStream), (devPtr, count, dstDevice, hStream))
 #endif
 
@@ -886,7 +900,7 @@ CUDA_API(cuStreamGetAttribute, (CUstream hStream, CUstreamAttrID attr, CUstreamA
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuStreamGetCaptureInfo
-CUDA_API(cuStreamGetCaptureInfo, (CUstream hStream, CUstreamCaptureStatus* captureStatus_out, cuuint64_t* id_out, CUgraph* graph_out, const CUgraphNode** dependencies_out, size_t* numDependencies_out), (hStream, captureStatus_out, id_out, graph_out, dependencies_out, numDependencies_out))
+CUDA_API(cuStreamGetCaptureInfo, (CUstream hStream, CUstreamCaptureStatus* captureStatus_out, cuuint64_t* id_out, CUgraph* graph_out, const CUgraphNode** dependencies_out, size_t* numDependencies_out), (hStream, captureStatus_out, id_out, graph_out, dependencies_out, nullptr, numDependencies_out))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuStreamGetCaptureInfo_v3
@@ -926,7 +940,7 @@ CUDA_API(cuStreamSynchronize, (CUstream hStream), (hStream))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuStreamUpdateCaptureDependencies
-CUDA_API(cuStreamUpdateCaptureDependencies, (CUstream hStream, CUgraphNode* dependencies, size_t numDependencies, unsigned int flags), (hStream, dependencies, numDependencies, flags))
+CUDA_API(cuStreamUpdateCaptureDependencies, (CUstream hStream, CUgraphNode* dependencies, size_t numDependencies, unsigned int flags), (hStream, dependencies, nullptr, numDependencies, flags))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuStreamUpdateCaptureDependencies_v2
@@ -1109,7 +1123,7 @@ CUDA_API(cuGraphAddChildGraphNode, (CUgraphNode * phGraphNode, CUgraph hGraph, c
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphAddDependencies
-CUDA_API(cuGraphAddDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, numDependencies))
+CUDA_API(cuGraphAddDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, nullptr, numDependencies))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphAddDependencies_v2
@@ -1161,7 +1175,7 @@ CUDA_API(cuGraphAddMemsetNode, (CUgraphNode * phGraphNode, CUgraph hGraph, const
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphAddNode
-CUDA_API(cuGraphAddNode, (CUgraphNode * phGraphNode, CUgraph hGraph, const CUgraphNode* dependencies, size_t numDependencies, CUgraphNodeParams* nodeParams), (phGraphNode, hGraph, dependencies, numDependencies, nodeParams))
+CUDA_API(cuGraphAddNode, (CUgraphNode * phGraphNode, CUgraph hGraph, const CUgraphNode* dependencies, size_t numDependencies, CUgraphNodeParams* nodeParams), (phGraphNode, hGraph, dependencies, nullptr, numDependencies, nodeParams))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphAddNode_v2
@@ -1293,7 +1307,7 @@ CUDA_API(cuGraphExternalSemaphoresWaitNodeSetParams, (CUgraphNode hNode, const C
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphGetEdges
-CUDA_API(cuGraphGetEdges, (CUgraph hGraph, CUgraphNode* from, CUgraphNode* to, size_t* numEdges), (hGraph, from, to, numEdges))
+CUDA_API(cuGraphGetEdges, (CUgraph hGraph, CUgraphNode* from, CUgraphNode* to, size_t* numEdges), (hGraph, from, to, nullptr, numEdges))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphGetEdges_v2
@@ -1377,7 +1391,7 @@ CUDA_API(cuGraphNodeFindInClone, (CUgraphNode * phNode, CUgraphNode hOriginalNod
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependencies
-CUDA_API(cuGraphNodeGetDependencies, (CUgraphNode hNode, CUgraphNode* dependencies, size_t* numDependencies), (hNode, dependencies, numDependencies))
+CUDA_API(cuGraphNodeGetDependencies, (CUgraphNode hNode, CUgraphNode* dependencies, size_t* numDependencies), (hNode, dependencies, nullptr, numDependencies))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependencies_v2
@@ -1385,7 +1399,7 @@ CUDA_API(cuGraphNodeGetDependencies_v2, (CUgraphNode hNode, CUgraphNode* depende
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependentNodes
-CUDA_API(cuGraphNodeGetDependentNodes, (CUgraphNode hNode, CUgraphNode* dependentNodes, size_t* numDependentNodes), (hNode, dependentNodes, numDependentNodes))
+CUDA_API(cuGraphNodeGetDependentNodes, (CUgraphNode hNode, CUgraphNode* dependentNodes, size_t* numDependentNodes), (hNode, dependentNodes, nullptr, numDependentNodes))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependentNodes_v2
@@ -1413,7 +1427,7 @@ CUDA_API(cuGraphReleaseUserObject, (CUgraph graph, CUuserObject object, unsigned
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphRemoveDependencies
-CUDA_API(cuGraphRemoveDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, numDependencies))
+CUDA_API(cuGraphRemoveDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, nullptr, numDependencies))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuGraphRemoveDependencies_v2
