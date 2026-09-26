@@ -79,8 +79,8 @@ if [ ! -z "$SYZ_ENV_BUILD" ]; then
 	IMAGE_NAME="syz-$IMAGE"
 	docker build "$SCRIPT_DIR/docker/$IMAGE" --tag "$IMAGE_NAME" ${BUILDARGS[@]}
 else
-	IMAGE_NAME="gcr.io/syzkaller/$IMAGE"
-	docker pull -q "$IMAGE_NAME"
+	IMAGE_NAME="syz-nvidia-env"
+  docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/nvidia-env"
 fi
 
 # Run everything as the host user, this is important for created/modified files.
