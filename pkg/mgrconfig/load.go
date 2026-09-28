@@ -277,6 +277,9 @@ func (cfg *Config) initTimeouts() {
 		slowdown = 10
 	}
 	// Note: we could also consider heavy debug tools (KASAN/KMSAN/KCSAN/KMEMLEAK) if necessary.
+	if cfg.GPUVendor == "nvidia" {
+		slowdown = 5
+	}
 	cfg.Timeouts = cfg.SysTarget.Timeouts(slowdown)
 }
 
