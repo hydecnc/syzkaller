@@ -10,7 +10,7 @@ CUctx_flags = CU_CTX_SCHED_AUTO, CU_CTX_SCHED_SPIN, CU_CTX_SCHED_YIELD, CU_CTX_S
 
 # API Definition
 syz_cuDevicePrimaryCtxGetState(dev CUdevice, flags ptr[out, int32], active ptr[out, int32])
-syz_cuDevicePrimaryCtxRelease(dev CUdevice)
+syz_cuDevicePrimaryCtxRelease(dev CUdevice) (timeout[200])
 syz_cuDevicePrimaryCtxReset(dev CUdevice)
-syz_cuDevicePrimaryCtxRetain(pctx ptr[out, CUcontext], dev CUdevice)
+syz_cuDevicePrimaryCtxRetain(pctx ptr[out, CUcontext], dev CUdevice) (timeout[200])
 syz_cuDevicePrimaryCtxSetFlags(dev CUdevice, flags flags[CUctx_flags])

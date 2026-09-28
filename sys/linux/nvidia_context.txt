@@ -36,8 +36,8 @@ CUctxCigParam {
 }
 
 # API Definition
-syz_cuCtxCreate_v4(pctx ptr[out, CUcontext], ctxCreateParams ptr[in, CUctxCreateParams, opt], flags flags[CUctx_flags], dev CUdevice)
-syz_cuCtxDestroy(ctx CUcontext)
+syz_cuCtxCreate_v4(pctx ptr[out, CUcontext], ctxCreateParams ptr[in, CUctxCreateParams, opt], flags flags[CUctx_flags], dev CUdevice) (timeout[200])
+syz_cuCtxDestroy(ctx CUcontext) (timeout[200])
 syz_cuCtxGetApiVersion(ctx CUcontext, version ptr[out, int32])
 syz_cuCtxGetCacheConfig(pconfig ptr[out, int32])
 syz_cuCtxGetCurrent(pctx ptr[out, CUcontext])
