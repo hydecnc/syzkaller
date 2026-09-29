@@ -1,6 +1,7 @@
 #include <cstdint>
 
 #if SYZ_EXECUTOR_NVIDIA
+#include "gpu_instrumentation/gpu_instrumentation.h"
 #include <cuda.h>
 
 #define CUDA_API(func, args_with_types, args)      \
@@ -16,6 +17,19 @@
 		return;                       \
 	}
 #endif
+
+static long syz_gpu_insert_buffer(std::uintptr_t buffer, const std::uint32_t size,
+				  const std::uint64_t offset)
+{
+#if SYZ_EXECUTOR_NVIDIA
+	return insertBuffer(reinterpret_cast<std::uint8_t*>(buffer), size, offset);
+#else
+	(void)buffer;
+	(void)size;
+	(void)offset;
+	return -1;
+#endif
+}
 
 #if SYZ_EXECUTOR_NVIDIA
 static const char* ptxSource = R"(
@@ -1035,12 +1049,12 @@ CUDA_API(cuLaunchKernelEx, (const CUlaunchConfig* config, CUfunction f, void** k
 
 #if SYZ_EXECUTOR_NVIDIA
 struct cu_launch_dims {
-  unsigned int gridDimX; 
-  unsigned int gridDimY;
-  unsigned int gridDimZ;
-  unsigned int blockDimX;
-  unsigned int blockDimY;
-  unsigned int blockDimZ;
+	unsigned int gridDimX;
+	unsigned int gridDimY;
+	unsigned int gridDimZ;
+	unsigned int blockDimX;
+	unsigned int blockDimY;
+	unsigned int blockDimZ;
 };
 #endif
 
