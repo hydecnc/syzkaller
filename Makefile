@@ -50,6 +50,9 @@ ifneq ("$(GOTAGS)", "")
 	GOFLAGS += " -tags=$(GOTAGS)"
 endif
 
+GPU_INSTRUMENTATION_SRCS := \
+	executor/gpu_instrumentation/gpu_instrumentation.cpp \
+	executor/gpu_instrumentation/utilities.cpp
 
 GOHOSTFLAGS ?= $(GOFLAGS)
 GOTARGETFLAGS ?= $(GOFLAGS)

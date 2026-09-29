@@ -83,6 +83,14 @@ else
   docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/nvidia-env"
 fi
 
+GITDIR="$(git -C "$SCRIPT_DIR/.." rev-parse --absolute-git-dir 2>/dev/null || true)"
+if [ -n "$GITDIR" ]; then
+	DOCKERARGS+=" --volume $GITDIR:/syzkaller/gitdir:z"
+	DOCKERARGS+=" --env GIT_DIR=/syzkaller/gitdir"
+	DOCKERARGS+=" --env GIT_WORK_TREE=/syzkaller/gopath/src/github.com/google/syzkaller"
+	DOCKERARGS+=" --env GIT_OPTIONAL_LOCKS=0"
+fi
+
 # Run everything as the host user, this is important for created/modified files.
 docker run \
 	--rm \
