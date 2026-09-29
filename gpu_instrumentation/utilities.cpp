@@ -27,7 +27,7 @@ enum class AddressType {
 
 class Injector
 {
-      private:
+private:
 	int m_fd{};
 	std::uint64_t m_regionSize{};
 
@@ -44,7 +44,7 @@ class Injector
 		return true;
 	}
 
-      public:
+public:
 	Injector(const std::string_view injector)
 	    : m_fd{open(injector.data(), O_RDWR)}
 	{
@@ -135,7 +135,11 @@ class Injector
 	}
 };
 
-Injector g_injector{DEVICE};
+Injector& injector()
+{
+	static Injector instance{DEVICE};
+	return instance;
+}
 
 std::optional<std::uint64_t> parseNumber(const std::string& str)
 {
@@ -210,7 +214,7 @@ bool injectorSetMemoryKVA(const GspMsgQueue::Info& info)
 		errno = ENODEV;
 		return false;
 	}
-	if (!g_injector.setRegion(info.shared_mem_kva, info.shared_mem_size,
+	if (!injector().setRegion(info.shared_mem_kva, info.shared_mem_size,
 				  AddressType::kva)) {
 		return false;
 	}
@@ -224,13 +228,13 @@ bool injectorSetMemoryKVA(const GspMsgQueue::Info& info)
 std::optional<std::vector<std::uint8_t>>
 injectorReadMemory(const std::uint64_t offset, const std::uint64_t size)
 {
-	return g_injector.readAt(offset, size);
+	return injector().readAt(offset, size);
 }
 
 bool injectorWriteMemory(const std::uint64_t offset,
 			 const std::vector<std::uint8_t>& buffer)
 {
-	return g_injector.writeAt(offset, buffer);
+	return injector().writeAt(offset, buffer);
 }
 
 std::optional<std::uint32_t> injectorReadMemoryU32(std::uint64_t offset)
