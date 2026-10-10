@@ -46,6 +46,11 @@ while true; do
 	    SKIP_BUILD="--skip-build"
 	    shift 1
 	    ;;
+        --rebuild-memory-injector)
+            REBUILD_MEMORY_INJECTOR=1
+            SKIP_BUILD="--skip-build"
+            shift 1
+            ;;
         --panic-on-assert)
             FLAG_PANIC_ON_ASSERT=1
             shift 1
@@ -76,6 +81,11 @@ fi
 
 if [ "$VENDOR" == "nvidia" ]; then
     RELEASE=trixie
+fi
+
+if [ "$VENDOR" == "amd" ]; then
+    echo "AMD GPU fuzzing curently not supported"
+    exit 0
 fi
 
 if [ "$RELEASE" == "" ]; then
@@ -110,6 +120,7 @@ Description=Build GPU modules
 
 [Service]
 ExecStart=sh -c "/root/.build_gpu/build-$VENDOR-gpu.sh $LINUX"
+ExecStart=sh -c "/root/.build_gpu/build-memory-injector.sh"
 Type=oneshot
 RemainAfterExit=no
 
@@ -131,8 +142,13 @@ EOF
     sudo cp $SYZ_TOOLS/build-$VENDOR-gpu.sh /mnt/chroot/root/.build_gpu
     sudo cp $SYZ_TOOLS/gpu_module.patch /mnt/chroot/root/.build_gpu
     sudo chmod +x /mnt/chroot/root/.build_gpu/build-$VENDOR-gpu.sh
+    sudo cp $SYZ_TOOLS/build-memory-injector.sh /mnt/chroot/root/.build_gpu
+    sudo chmod +x /mnt/chroot/root/.build_gpu/build-memory-injector.sh
+    sudo mkdir -p /mnt/chroot/root/.build_gpu/memory-injector
+    sudo cp $SYZ_TOOLS/../memory-injector/{Makefile,memory_injector.c,memory_injector.h} /mnt/chroot/root/.build_gpu/memory-injector/
     sudo chmod +x /mnt/chroot/root/.build_gpu/monitor-service.sh
     sudo touch /mnt/chroot/root/.build_gpu/update
+    sudo touch /mnt/chroot/root/.build_gpu/update_memory_injector
 
     sudo mkdir -p /mnt/chroot/root/.syzkaller_features/
     sudo touch /mnt/chroot/root/.syzkaller_features/DISABLE_NETDEV
@@ -153,6 +169,18 @@ EOF
     touch $IMAGE/.stamp/GUEST_SCRIPT_READY
 else
     echo "Found $IMAGE/.stamp/GUEST_SCRIPT_READY"
+fi
+
+if [ "$REBUILD_MEMORY_INJECTOR" != "" ]; then
+    sudo mkdir -p /mnt/chroot
+    sudo mount -o loop $IMAGE/$RELEASE.img /mnt/chroot
+    sudo mkdir -p /mnt/chroot/root/.build_gpu/memory-injector
+    sudo cp $SYZ_TOOLS/build-memory-injector.sh /mnt/chroot/root/.build_gpu
+    sudo chmod +x /mnt/chroot/root/.build_gpu/build-memory-injector.sh
+    sudo cp $SYZ_TOOLS/../memory-injector/{Makefile,memory_injector.c,memory_injector.h} /mnt/chroot/root/.build_gpu/memory-injector/
+    sudo touch /mnt/chroot/root/.build_gpu/update_memory_injector
+    sudo rm /mnt/chroot/root/.build_gpu/.stamp/BUILD_MEMORY_INJECTOR || true
+    sudo umount /mnt/chroot
 fi
 
 if [ "$GPU_SRC_PATCH" != "" ]; then
