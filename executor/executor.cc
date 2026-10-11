@@ -73,6 +73,8 @@ const int kCoverFd = kOutPipeFd - kMaxThreads;
 const int kExtraCoverFd = kCoverFd - 1;
 const int kMaxArgs = 9;
 const int kCoverSize = 512 << 10;
+const int kNvidiaCoverSize = 128 << 20;
+const int kNvidiaLargeCoverThreads = 2;
 const int kFailStatus = 67;
 
 // Two approaches of dealing with kcov memory.
@@ -1621,7 +1623,7 @@ static uint32 hash(uint32 a)
 	return a;
 }
 
-const uint32 dedup_table_size = 8 << 10;
+const uint32 dedup_table_size = 1 << 20;
 uint64 dedup_table_sig[dedup_table_size];
 uint8 dedup_table_index[dedup_table_size];
 

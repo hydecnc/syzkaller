@@ -160,8 +160,11 @@ static void cover_open(cover_t* cov, bool extra)
 		failmsg("filed to dup cover fd", "from=%d, to=%d", fd, cov->fd);
 	close(fd);
 	const int kcov_init_trace = is_kernel_64_bit ? KCOV_INIT_TRACE64 : KCOV_INIT_TRACE32;
-	const int cover_size = extra ? kExtraCoverSize : flag_snapshot ? kSnapshotCoverSize
-								       : kCoverSize;
+	int cover_size = extra ? kExtraCoverSize : flag_snapshot ? kSnapshotCoverSize
+								 : kCoverSize;
+	// Thread i uses fd kCoverFd + i.
+	if (!extra && !flag_snapshot && flag_nvidia && cov->fd - kCoverFd < kNvidiaLargeCoverThreads)
+		cover_size = kNvidiaCoverSize;
 	if (ioctl(cov->fd, kcov_init_trace, cover_size))
 		fail("cover init trace write failed");
 	cov->data_size = cover_size * (is_kernel_64_bit ? 8 : 4);
