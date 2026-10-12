@@ -9,9 +9,9 @@ CUfunctionLoadingState = CU_FUNCTION_LOADING_STATE_UNLOADED, CU_FUNCTION_LOADING
 # Structure Definition
 
 type CUlaunchConfig[CULAUNCHATTRIBUTE_OP1] {
-	gridDimX	int32
-	gridDimY	int32
-	gridDimZ	int32
+	gridDimX	int32[0:0x10000]
+	gridDimY	int32[0:0x10]
+	gridDimZ	int32[0:0x10]
 	blockDimX	int32
 	blockDimY	int32
 	blockDimZ	int32
@@ -82,9 +82,9 @@ dummy_kernel_params {
 }
 
 cu_launch_dims {
-	gridDimX	int32
-	gridDimY	int32
-	gridDimZ	int32
+	gridDimX	int32[0:0x10000]
+	gridDimY	int32[0:0x10]
+	gridDimZ	int32[0:0x10]
 	blockDimX	int32
 	blockDimY	int32
 	blockDimZ	int32

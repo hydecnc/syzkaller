@@ -28,7 +28,7 @@ type CUmemPoolGetAttribute_value_cuuint64_t int64
 
 # API Definition
 syz_cuMemAllocAsync(dptr ptr[out, CUdeviceptr], bytesize intptr, hStream CUstream)
-syz_cuMemAllocFromPoolAsync(dptr ptr[out, CUdeviceptr], bytesize intptr, pool CUmemoryPool, hStream CUstream)
+syz_cuMemAllocFromPoolAsync(dptr ptr[out, CUdeviceptr], bytesize nv_host_bytes, pool CUmemoryPool, hStream CUstream)
 syz_cuMemFreeAsync(dptr CUdeviceptr, hStream CUstream)
 syz_cuMemPoolCreate(pool ptr[out, CUmemoryPool], poolProps ptr[in, CUmemPoolProps])
 syz_cuMemPoolDestroy(pool CUmemoryPool)

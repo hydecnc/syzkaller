@@ -35,9 +35,9 @@ type CUDA_BATCH_MEM_OP_NODE_PARAMS[CUDA_BATCH_MEM_OP_NODE_PARAMS_OP1] {
 
 CUDA_KERNEL_NODE_PARAMS {
 	func		CUfunction
-	gridDimX	int32
-	gridDimY	int32
-	gridDimZ	int32
+	gridDimX	int32[0:0x10000]
+	gridDimY	int32[0:0x10]
+	gridDimZ	int32[0:0x10]
 	blockDimX	int32
 	blockDimY	int32
 	blockDimZ	int32
@@ -52,7 +52,7 @@ CUDA_MEM_ALLOC_NODE_PARAMS {
 	poolProps	CUmemPoolProps
 	accessDescs	ptr[in, array[CUmemAccessDesc]]
 	accessDescCount	len[accessDescs, int64]
-	bytesize	int64
+	bytesize	int64[0:0x4000000]
 	dptr		CUdeviceptr	(out)
 }
 
@@ -78,9 +78,9 @@ type CUgraphNodeParams_union[CUGRAPHNODEPARAMS_OP1] {
 
 CUDA_KERNEL_NODE_PARAMS_v3 {
 	func		CUfunction
-	gridDimX	int32
-	gridDimY	int32
-	gridDimZ	int32
+	gridDimX	int32[0:0x10000]
+	gridDimY	int32[0:0x10]
+	gridDimZ	int32[0:0x10]
 	blockDimX	int32
 	blockDimY	int32
 	blockDimZ	int32

@@ -95,7 +95,7 @@ CUmemAccessDesc {
 # API Definition
 syz_cuMemAddressFree(ptr CUdeviceptr, size intptr)
 syz_cuMemAddressReserve(ptr ptr[out, CUdeviceptr], size intptr, alignment intptr, addr CUdeviceptr, flags intptr)
-syz_cuMemCreate(handle ptr[out, CUmemGenericAllocationHandle], size intptr, prop ptr[in, CUmemAllocationProp], flags const[0])
+syz_cuMemCreate(handle ptr[out, CUmemGenericAllocationHandle], size nv_host_bytes, prop ptr[in, CUmemAllocationProp], flags const[0])
 syz_cuMemExportToShareableHandle(shareableHandle ptr[out, void], handle CUmemGenericAllocationHandle, handleType flags[CUmemAllocationHandleType], flags const[0])
 syz_cuMemGetAccess(flags ptr[out, flags[CUmemAccess_flags, int64]], location ptr[in, CUmemLocation], ptr CUdeviceptr)
 syz_cuMemGetAllocationGranularity(granularity ptr[out, int64], prop ptr[in, CUmemAllocationProp], option flags[CUmemAllocationGranularity_flags])

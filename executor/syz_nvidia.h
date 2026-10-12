@@ -9,6 +9,15 @@
 	{                                          \
 		return func args;                  \
 	}
+
+#define kNvidiaMaxHostBytes (64 << 20)
+#define CUDA_API_CAPPED(func, args_with_types, args, size) \
+	static CUresult syz_##func args_with_types         \
+	{                                                  \
+		if ((size) > kNvidiaMaxHostBytes)          \
+			return CUDA_ERROR_INVALID_VALUE;   \
+		return func args;                          \
+	}
 #else
 
 #define CUDA_API(func, args_with_types, args) \
@@ -16,6 +25,7 @@
 	{                                     \
 		return;                       \
 	}
+#define CUDA_API_CAPPED(func, args_with_types, args, size) CUDA_API(func, args_with_types, args)
 #endif
 
 static long syz_gpu_insert_buffer(std::uintptr_t buffer, const std::uint32_t size,
@@ -249,7 +259,7 @@ CUDA_API(cuCtxSetFlags, (unsigned int flags), (flags))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuCtxSetLimit
-CUDA_API(cuCtxSetLimit, (CUlimit limit, size_t value), (limit, value))
+CUDA_API_CAPPED(cuCtxSetLimit, (CUlimit limit, size_t value), (limit, value), value)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuCtxSynchronize
@@ -467,11 +477,11 @@ CUDA_API(cuMemAlloc, (CUdeviceptr * dptr, size_t bytesize), (dptr, bytesize))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemAllocHost
-CUDA_API(cuMemAllocHost, (void** pp, size_t bytesize), (pp, bytesize))
+CUDA_API_CAPPED(cuMemAllocHost, (void** pp, size_t bytesize), (pp, bytesize), bytesize)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemAllocManaged
-CUDA_API(cuMemAllocManaged, (CUdeviceptr * dptr, size_t bytesize, unsigned int flags), (dptr, bytesize, flags))
+CUDA_API_CAPPED(cuMemAllocManaged, (CUdeviceptr * dptr, size_t bytesize, unsigned int flags), (dptr, bytesize, flags), bytesize)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemAllocPitch
@@ -499,7 +509,7 @@ CUDA_API(cuMemGetInfo, (size_t* free, size_t* total), (free, total))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemHostAlloc
-CUDA_API(cuMemHostAlloc, (void** pp, size_t bytesize, unsigned int Flags), (pp, bytesize, Flags))
+CUDA_API_CAPPED(cuMemHostAlloc, (void** pp, size_t bytesize, unsigned int Flags), (pp, bytesize, Flags), bytesize)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemHostGetDevicePointer
@@ -511,7 +521,7 @@ CUDA_API(cuMemHostGetFlags, (unsigned int* pFlags, void* p), (pFlags, p))
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemHostRegister
-CUDA_API(cuMemHostRegister, (void* p, size_t bytesize, unsigned int Flags), (p, bytesize, Flags))
+CUDA_API_CAPPED(cuMemHostRegister, (void* p, size_t bytesize, unsigned int Flags), (p, bytesize, Flags), bytesize)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemHostUnregister
@@ -692,7 +702,7 @@ CUDA_API(cuMemAddressReserve, (CUdeviceptr * ptr, size_t size, size_t alignment,
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemCreate
-CUDA_API(cuMemCreate, (CUmemGenericAllocationHandle * handle, size_t size, const CUmemAllocationProp* prop, unsigned long long flags), (handle, size, prop, flags))
+CUDA_API_CAPPED(cuMemCreate, (CUmemGenericAllocationHandle * handle, size_t size, const CUmemAllocationProp* prop, unsigned long long flags), (handle, size, prop, flags), size)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemExportToShareableHandle
@@ -745,7 +755,7 @@ CUDA_API(cuMemAllocAsync, (CUdeviceptr * dptr, size_t bytesize, CUstream hStream
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemAllocFromPoolAsync
-CUDA_API(cuMemAllocFromPoolAsync, (CUdeviceptr * dptr, size_t bytesize, CUmemoryPool pool, CUstream hStream), (dptr, bytesize, pool, hStream))
+CUDA_API_CAPPED(cuMemAllocFromPoolAsync, (CUdeviceptr * dptr, size_t bytesize, CUmemoryPool pool, CUstream hStream), (dptr, bytesize, pool, hStream), bytesize)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemFreeAsync
@@ -825,7 +835,7 @@ CUDA_API(cuMemAdvise_v2, (CUdeviceptr devPtr, size_t count, CUmem_advise advice,
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemPrefetchAsync_v2
-CUDA_API(cuMemPrefetchAsync_v2, (CUdeviceptr devPtr, size_t count, CUmemLocation* location, unsigned int flags, CUstream hStream), (devPtr, count, *location, flags, hStream))
+CUDA_API_CAPPED(cuMemPrefetchAsync_v2, (CUdeviceptr devPtr, size_t count, CUmemLocation* location, unsigned int flags, CUstream hStream), (devPtr, count, *location, flags, hStream), count)
 #endif
 
 #if SYZ_EXECUTOR || __NR_syz_cuMemRangeGetAttribute

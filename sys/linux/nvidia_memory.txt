@@ -9,6 +9,8 @@ resource CUhostptr[intptr]
 resource CUmemRangeHandle[int32]
 resource CUmipmappedArray[intptr]
 
+type nv_host_bytes intptr[0:0x4000000]
+
 # Enum Definition
 CUDA_ARRAY3D_FLAGS = CUDA_ARRAY3D_LAYERED, CUDA_ARRAY3D_SURFACE_LDST, CUDA_ARRAY3D_CUBEMAP, CUDA_ARRAY3D_TEXTURE_GATHER, CUDA_ARRAY3D_DEPTH_TEXTURE, CUDA_ARRAY3D_COLOR_ATTACHMENT, CUDA_ARRAY3D_SPARSE, CUDA_ARRAY3D_DEFERRED_MAPPING, CUDA_ARRAY3D_VIDEO_ENCODE_DECODE
 
@@ -165,18 +167,18 @@ syz_cuIpcGetMemHandle(pHandle ptr[out, CUipcMemHandle], dptr CUdeviceptr)
 syz_cuIpcOpenEventHandle(phEvent ptr[out, CUevent], handle ptr[in, CUipcEventHandle])
 # syz_cuIpcOpenMemHandle(pdptr ptr[out, CUdeviceptr], handle array[int8, 64], Flags flags[CUmemAttach_flags])
 syz_cuMemAlloc(dptr ptr[out, CUdeviceptr], bytesize intptr)
-syz_cuMemAllocHost(pp ptr[out, CUhostptr], bytesize intptr)
-syz_cuMemAllocManaged(dptr ptr[out, CUdeviceptr], bytesize intptr, flags flags[CUmemAttach_flags])
+syz_cuMemAllocHost(pp ptr[out, CUhostptr], bytesize nv_host_bytes)
+syz_cuMemAllocManaged(dptr ptr[out, CUdeviceptr], bytesize nv_host_bytes, flags flags[CUmemAttach_flags])
 syz_cuMemAllocPitch(dptr ptr[out, CUdeviceptr], pPitch ptr[out, int64], WidthInBytes intptr, Height intptr, ElementSizeBytes int32)
 syz_cuMemFree(dptr CUdeviceptr)
 syz_cuMemFreeHost(p CUhostptr)
 syz_cuMemGetAddressRange(pbase ptr[out, CUdeviceptr], psize ptr[out, int64], dptr CUdeviceptr)
 syz_cuMemGetHandleForAddressRange(handle ptr[out, CUmemRangeHandle], dptr CUdeviceptr, size intptr, handleType flags[CUmemRangeHandleType], flags flags[CUmemRangeFlags])
 syz_cuMemGetInfo(free ptr[out, int64], total ptr[out, int64])
-syz_cuMemHostAlloc(pp ptr[out, CUhostptr], bytesize intptr, Flags flags[CUmemHostAllocFlags])
+syz_cuMemHostAlloc(pp ptr[out, CUhostptr], bytesize nv_host_bytes, Flags flags[CUmemHostAllocFlags])
 syz_cuMemHostGetDevicePointer(pdptr ptr[out, CUdeviceptr], p ptr[in, void], Flags const[0])
 syz_cuMemHostGetFlags(pFlags ptr[out, int32], p CUhostptr)
-syz_cuMemHostRegister(p ptr[in, void], bytesize intptr, Flags flags[CUmemHostRegisterFlags])
+syz_cuMemHostRegister(p ptr[in, void], bytesize nv_host_bytes, Flags flags[CUmemHostRegisterFlags])
 syz_cuMemHostUnregister(p CUhostptr)
 syz_cuMemcpy(dst CUdeviceptr, src CUdeviceptr, ByteCount intptr)
 syz_cuMemcpy2D(pCopy ptr[in, CUDA_MEMCPY2D])

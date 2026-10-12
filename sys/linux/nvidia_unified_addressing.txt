@@ -14,7 +14,7 @@ CUpointer_attribute = CU_POINTER_ATTRIBUTE_CONTEXT, CU_POINTER_ATTRIBUTE_MEMORY_
 
 # API Definition
 syz_cuMemAdvise_v2(devPtr CUdeviceptr, count intptr, advice flags[CUmem_advise], location ptr[in, CUmemLocation])
-syz_cuMemPrefetchAsync_v2(devPtr CUdeviceptr, count intptr, location ptr[in, CUmemLocation], flags const[0], hStream CUstream)
+syz_cuMemPrefetchAsync_v2(devPtr CUdeviceptr, count nv_host_bytes, location ptr[in, CUmemLocation], flags const[0], hStream CUstream)
 syz_cuMemRangeGetAttribute(data ptr[out, array[int32]], dataSize bytesize[data], attribute flags[CUmem_range_attribute], devPtr CUdeviceptr, count intptr)
 syz_cuMemRangeGetAttributes(data ptr[in, array[ptr[out, int64]]], dataSizes ptr[in, array[int64]], attributes ptr[in, array[flags[CUmem_range_attribute, int32]]], numAttributes len[attributes], devPtr CUdeviceptr, count intptr)
 syz_cuPointerGetAttribute(data ptr[out, int64], attribute flags[CUpointer_attribute], ptr CUdeviceptr)
