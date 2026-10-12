@@ -1249,13 +1249,15 @@ uint32 write_signal(flatbuffers::FlatBufferBuilder& fbb, int index, cover_t* cov
 	bool prev_filter = true;
 	for (uint32 i = 0; i < cov->size; i++) {
 		cover_data_t pc = cover_data[i] + cov->pc_offset;
+		bool filter = coverage_filter(pc);
+		if (flag_nvidia && cover_filter && !filter)
+			continue;
 		uint64 sig = pc;
 		if (use_cover_edges) {
 			// Only hash the lower 12 bits so the hash is independent of any module offsets.
 			const uint64 mask = (1 << 12) - 1;
 			sig ^= hash(prev_pc & mask) & mask;
 		}
-		bool filter = coverage_filter(pc);
 		// Ignore the edge only if both current and previous PCs are filtered out
 		// to capture all incoming and outcoming edges into the interesting code.
 		bool ignore = !filter && !prev_filter;
@@ -1866,7 +1868,7 @@ rpc::ComparisonRaw convert(const kcov_comparison_t& cmp)
 		return {};
 	if (arg2 >= out_start && arg2 <= out_end)
 		return {};
-	if (!coverage_filter(cmp.pc))
+	if (flag_nvidia && !coverage_filter(cmp.pc))
 		return {};
 
 	// KCOV converts all arguments of size x first to uintx_t and then to uint64.
