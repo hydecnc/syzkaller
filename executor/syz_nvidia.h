@@ -74,6 +74,10 @@ EXIT:
 
 static void loop();
 
+#if SYZ_EXECUTOR_NVIDIA
+static CUcontext nvidia_ctx;
+#endif
+
 #if SYZ_EXECUTOR_NVIDIA || SYZ_NVIDIA
 static void setup_nvidia_driver()
 {
@@ -86,6 +90,11 @@ static void setup_nvidia_driver()
 	int ret = cuInit(0);
 	if (ret != 0)
 		debug("[GPU Fuzzing] ========> Initialize nvidia driver -> %d\n", ret);
+	CUdevice dev;
+	if (!ret && !(ret = cuDeviceGet(&dev, 0)) && !(ret = cuDevicePrimaryCtxRetain(&nvidia_ctx, dev)))
+		ret = cuCtxSetCurrent(nvidia_ctx);
+	if (ret != 0)
+		debug("[GPU Fuzzing] ========> Set up context -> %d\n", ret);
 #endif
 	return;
 }

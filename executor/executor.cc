@@ -1537,6 +1537,11 @@ void* worker_thread(void* arg)
 {
 	thread_t* th = (thread_t*)arg;
 	current_thread = th;
+#if SYZ_EXECUTOR_NVIDIA
+	if (flag_nvidia && nvidia_ctx) {
+		cuCtxSetCurrent(nvidia_ctx);
+	}
+#endif
 	for (bool first = true;; first = false) {
 		event_wait(&th->ready);
 		event_reset(&th->ready);
