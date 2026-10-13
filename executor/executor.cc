@@ -1297,7 +1297,15 @@ uint32 write_comparisons(flatbuffers::FlatBufferBuilder& fbb, cover_t* cov)
 	kcov_comparison_t* cov_start = (kcov_comparison_t*)(cov->data + sizeof(uint64));
 	if ((char*)(cov_start + ncomps) > cov->data_end)
 		failmsg("too many comparisons", "ncomps=%llu", ncomps);
-	cov->overflow = ((char*)(cov_start + ncomps + 1) > cov->data_end);
+	char* data_end = cov->data_end;
+	// kNvidiaCoverSize buffers hold 256x more comparisons than kCoverSize ones,
+	// which does not fit into kMaxOutputComparisons. Use only the comparisons
+	// that a kCoverSize buffer would have recorded, as KCOV records them in order.
+	if (flag_nvidia && !flag_snapshot) {
+		data_end = std::min(data_end, cov->data + kCoverSize * (is_kernel_64_bit ? 8 : 4));
+		ncomps = std::min<uint64>(ncomps, (data_end - (char*)cov_start) / sizeof(kcov_comparison_t));
+	}
+	cov->overflow = ((char*)(cov_start + ncomps + 1) > data_end);
 	rpc::ComparisonRaw* start = (rpc::ComparisonRaw*)cov_start;
 	rpc::ComparisonRaw* end = start;
 	// We will convert kcov_comparison_t to ComparisonRaw inplace.
@@ -1319,6 +1327,17 @@ uint32 write_comparisons(flatbuffers::FlatBufferBuilder& fbb, cover_t* cov)
 			 return a.pc() == b.pc() && a.op1() == b.op1() && a.op2() == b.op2();
 		 }) -
 		 start;
+	// All calls share the output region, and ShmemAllocator cannot grow it.
+	// Truncate instead of failing in reallocate_downward, and leave room for the rest of the reply.
+	if (flag_nvidia) {
+		const uint64 kReserve = 64 << 10;
+		uint64 used = sizeof(OutputData) + fbb.GetSize() + kReserve;
+		uint64 room = used < output_size ? (output_size - used) / sizeof(rpc::ComparisonRaw) : 0;
+		if (ncomps > room) {
+			ncomps = room;
+			cov->overflow = true;
+		}
+	}
 	return fbb.CreateVectorOfStructs(start, ncomps).o;
 }
 
