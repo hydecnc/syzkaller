@@ -27,6 +27,84 @@ index 5f842004..66f789bd 100644
  }
  
  NV_STATUS uvm_spin_loop(uvm_spin_loop_t *spin)
+diff --git a/kernel-open/nvidia/gpu_instrumentation.h b/kernel-open/nvidia/gpu_instrumentation.h
+new file mode 100644
+index 00000000..56bb1e93
+--- /dev/null
++++ b/kernel-open/nvidia/gpu_instrumentation.h
+@@ -0,0 +1,17 @@
++#ifndef GPU_INSTRUMENTATION_KO_H
++#define GPU_INSTRUMENTATION_KO_H
++
++// Must mirror struct GspMsgQueueInfo in
++// src/nvidia/inc/kernel/gpu/gsp/gpu_instrumentation.h.
++struct GspMsgQueueInfo {
++  u64 shared_mem_kva;
++  u64 shared_mem_size;
++  u64 cmd_queue_offset;
++  u64 cmd_queue_size;
++  u64 status_queue_offset;
++  u64 status_queue_size;
++};
++
++const struct GspMsgQueueInfo *getGspMsgQueueInfo(void);
++
++#endif
+diff --git a/kernel-open/nvidia/nv-procfs.c b/kernel-open/nvidia/nv-procfs.c
+index c5fea174..8857c2d8 100644
+--- a/kernel-open/nvidia/nv-procfs.c
++++ b/kernel-open/nvidia/nv-procfs.c
+@@ -32,6 +32,7 @@
+ #include "nv_compiler.h"
+ #include "nv-reg.h"
+ #include "conftest/patches.h"
++#include "gpu_instrumentation.h"
+ 
+ #define NV_DEFINE_SINGLE_NVRM_PROCFS_FILE(name) \
+     NV_DEFINE_SINGLE_PROCFS_FILE_READ_ONLY(name, nv_system_pm_lock)
+@@ -243,6 +244,31 @@ nv_procfs_read_version(
+ 
+ NV_DEFINE_SINGLE_NVRM_PROCFS_FILE(version);
+ 
++static int
++nv_procfs_read_instrumentation(
++    struct seq_file *s,
++    void *v
++)
++{
++    const struct GspMsgQueueInfo *info = getGspMsgQueueInfo();
++
++    if (!info) {
++        seq_printf(s, "no info on GSP message queue\n");
++        return 0;
++    }
++
++    seq_printf(s, "shared_mem_kva=0x%llx\n",      info->shared_mem_kva);
++    seq_printf(s, "shared_mem_size=0x%llx\n",     info->shared_mem_size);
++    seq_printf(s, "cmd_queue_offset=0x%llx\n",    info->cmd_queue_offset);
++    seq_printf(s, "cmd_queue_size=0x%llx\n",      info->cmd_queue_size);
++    seq_printf(s, "status_queue_offset=0x%llx\n", info->status_queue_offset);
++    seq_printf(s, "status_queue_size=0x%llx\n",   info->status_queue_size);
++
++    return 0;
++}
++
++NV_DEFINE_SINGLE_PROCFS_FILE_READ_ONLY_WITHOUT_LOCK(instrumentation)
++
+ static void
+ nv_procfs_close_file(
+     nv_procfs_private_t *nvpp
+@@ -1469,6 +1495,10 @@ int nv_procfs_add_gpu(nv_linux_state_t *nvl)
+     if (!entry)
+         goto failed;
+ 
++    entry = NV_CREATE_PROC_FILE("instrumentation", proc_nvidia_gpu, instrumentation, nv);
++    if (!entry)
++        goto failed;
++
+     if (IS_EXERCISE_ERROR_FORWARDING_ENABLED())
+     {
+         entry = NV_CREATE_PROC_FILE("exercise_error_forwarding", proc_nvidia_gpu,
 diff --git a/src/common/unix/common/inc/nv_assert.h b/src/common/unix/common/inc/nv_assert.h
 index 8c62ef52..b97ed79f 100644
 --- a/src/common/unix/common/inc/nv_assert.h
@@ -96,6 +174,44 @@ index 9abfc7cf..1b7fee73 100644
  
  ifeq ($(TARGET_ARCH),x86_64)
    CFLAGS += -msoft-float
+diff --git a/src/nvidia/exports_link_command.txt b/src/nvidia/exports_link_command.txt
+index 1c434b9c..a7063701 100644
+--- a/src/nvidia/exports_link_command.txt
++++ b/src/nvidia/exports_link_command.txt
+@@ -214,3 +214,4 @@
+ --undefined=rm_acpi_nvpcf_notify
+ --undefined=rm_notify_gpu_addition
+ --undefined=rm_notify_gpu_removal
++--undefined=getGspMsgQueueInfo
+diff --git a/src/nvidia/inc/kernel/gpu/gsp/gpu_instrumentation.h b/src/nvidia/inc/kernel/gpu/gsp/gpu_instrumentation.h
+new file mode 100644
+index 00000000..9b606baf
+--- /dev/null
++++ b/src/nvidia/inc/kernel/gpu/gsp/gpu_instrumentation.h
+@@ -0,0 +1,23 @@
++/**
++ * kernel-open/nvidia/gpu_instrumentation.h must contain an identical definition
++ * of GspMsgQueueInfo through manual intervention.
++ */
++#ifndef GPU_INSTRUMENTATION_H
++#define GPU_INSTRUMENTATION_H
++
++#include "nvtypes.h"
++
++struct GspMsgQueueInfo {
++  NvU64 shared_mem_kva;
++  NvU64 shared_mem_size;
++  NvU64 cmd_queue_offset;
++  NvU64 cmd_queue_size;
++  NvU64 status_queue_offset;
++  NvU64 status_queue_size;
++};
++
++void setGspMsgQueueInfo(const struct GspMsgQueueInfo *info);
++void clearGspMsgQueueInfo(void);
++const struct GspMsgQueueInfo *getGspMsgQueueInfo(void);
++
++#endif
 diff --git a/src/nvidia/inc/libraries/utils/nvassert.h b/src/nvidia/inc/libraries/utils/nvassert.h
 index b1a8b2d8..7630887b 100644
 --- a/src/nvidia/inc/libraries/utils/nvassert.h
@@ -241,48 +357,77 @@ index b1a8b2d8..7630887b 100644
  
  #define NV_CHECK_FAILED_FUNC(level, exprStr)                                   \
      if (NV_PRINTF_LEVEL_ENABLED(level))                                        \
-diff --git a/kernel-open/nvidia/os-interface.c b/kernel-open/nvidia/os-interface.c
-index f4f92f6..daf849a 100644
---- a/kernel-open/nvidia/os-interface.c
-+++ b/kernel-open/nvidia/os-interface.c
-@@ -2981,20 +2981,9 @@ void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo, int impl)
- {
-     struct task_struct *task;
-     struct pid *p;
-+    void *cgroup = NULL;
-     int subsys_id;
-
--    if (pidInfo)
--        p = pidInfo;
--    else
--        p = find_vpid(pid);
--
--    if (!p)
--        return NULL;
--
--    task = pid_task(p, PIDTYPE_PID);
--    if (!task)
--        return NULL;
--
-     switch (impl)
-     {
- #if defined(NV_DMEM_CGROUP_PRESENT)
-@@ -3010,7 +2999,17 @@ void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo, int impl)
-         default:
-             return NULL;
-     }
--    return task_cgroup(task, subsys_id);
+diff --git a/src/nvidia/src/kernel/gpu/gsp/gpu_instrumentation.c b/src/nvidia/src/kernel/gpu/gsp/gpu_instrumentation.c
+new file mode 100644
+index 00000000..280979a1
+--- /dev/null
++++ b/src/nvidia/src/kernel/gpu/gsp/gpu_instrumentation.c
+@@ -0,0 +1,16 @@
++#include "gpu/gsp/gpu_instrumentation.h"
++#include "core/core.h"
 +
-+    // find_vpid(), pid_task() and task_cgroup() must be called under RCU.
-+    // Likely version-specific and irrelevant to StepStone.
-+    rcu_read_lock();
-+    p = pidInfo ? pidInfo : find_vpid(pid);
-+    task = p ? pid_task(p, PIDTYPE_PID) : NULL;
-+    if (task)
-+        cgroup = task_cgroup(task, subsys_id);
-+    rcu_read_unlock();
++static struct GspMsgQueueInfo cached_info;
++static int info_valid = 0;
 +
-+    return cgroup;
- }
-
- #if defined(NV_DMEM_CGROUP_PRESENT) || defined(NV_MISC_CGROUP_PRESENT)
++void setGspMsgQueueInfo(const struct GspMsgQueueInfo *info) {
++  cached_info = *info;
++  info_valid = 1;
++}
++
++void clearGspMsgQueueInfo(void) { info_valid = 0; }
++
++const struct GspMsgQueueInfo *getGspMsgQueueInfo(void) {
++  return info_valid ? &cached_info : NULL;
++}
+diff --git a/src/nvidia/src/kernel/gpu/gsp/message_queue_cpu.c b/src/nvidia/src/kernel/gpu/gsp/message_queue_cpu.c
+index 51a296f8..70eed7a4 100644
+--- a/src/nvidia/src/kernel/gpu/gsp/message_queue_cpu.c
++++ b/src/nvidia/src/kernel/gpu/gsp/message_queue_cpu.c
+@@ -55,6 +55,7 @@
+ #include "nvrm_registry.h"
+ #include "gpu/conf_compute/ccsl.h"
+ #include "gpu/conf_compute/conf_compute.h"
++#include "gpu/gsp/gpu_instrumentation.h"
+ 
+ static void _gspMsgQueueCleanup(MESSAGE_QUEUE_INFO *pMQI);
+ 
+@@ -321,6 +322,18 @@ GspMsgQueuesInit
+     lastQueueVa   = NV_PTR_TO_NvP64(pRmQueueInfo->pStatusQueue);
+     lastQueueSize = pRmQueueInfo->statusQueueSize;
+ 
++    {
++      const struct GspMsgQueueInfo info = {
++        .shared_mem_kva    = (NvU64)(NvUPtr)NvP64_VALUE(pVaKernel),
++        .shared_mem_size   = sharedBufSize,
++        .cmd_queue_offset  = pMQCollection->pageTableSize,
++        .cmd_queue_size    = pRmQueueInfo->commandQueueSize,
++        .status_queue_offset = pMQCollection->pageTableSize + pRmQueueInfo->commandQueueSize,
++        .status_queue_size   = pRmQueueInfo->statusQueueSize,
++      };
++      setGspMsgQueueInfo(&info);
++    }
++
+     // Assert that the last queue offset + size fits into the shared memory.
+     NV_ASSERT(NvP64_PLUS_OFFSET(pVaKernel, sharedBufSize) ==
+               NvP64_PLUS_OFFSET(lastQueueVa, lastQueueSize));
+@@ -442,6 +455,8 @@ void GspMsgQueuesCleanup(MESSAGE_QUEUE_COLLECTION **ppMQCollection)
+     if ((ppMQCollection == NULL) || (*ppMQCollection == NULL))
+         return;
+ 
++    clearGspMsgQueueInfo();
++
+     pMQCollection     = *ppMQCollection;
+     pRmQueueInfo      = &pMQCollection->rpcQueues[RPC_TASK_RM_QUEUE_IDX];
+ 
+diff --git a/src/nvidia/srcs.mk b/src/nvidia/srcs.mk
+index af8dacd7..d2cc9355 100644
+--- a/src/nvidia/srcs.mk
++++ b/src/nvidia/srcs.mk
+@@ -626,6 +626,7 @@ SRCS += src/kernel/gpu/gsp/kernel_gsp_booter.c
+ SRCS += src/kernel/gpu/gsp/kernel_gsp_fwsec.c
+ SRCS += src/kernel/gpu/gsp/kernel_gsp_trace_rats.c
+ SRCS += src/kernel/gpu/gsp/message_queue_cpu.c
++SRCS += src/kernel/gpu/gsp/gpu_instrumentation.c
+ SRCS += src/kernel/gpu/gsplite/kernel_gsplite.c
+ SRCS += src/kernel/gpu/hfrp/kernel_hfrp.c
+ SRCS += src/kernel/gpu/host_eng/host_eng.c
