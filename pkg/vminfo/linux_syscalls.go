@@ -127,6 +127,7 @@ var linuxSyscallChecksPrefix = []struct {
 	check  func(*checkContext, *prog.Syscall) string
 }{
 	{"syz_cu", linuxSyzCudaSupported},
+	{"syz_gpu_", linuxSyzGpuInstrumentSupported},
 }
 
 func linuxSyzOpenDevSupported(ctx *checkContext, call *prog.Syscall) string {
@@ -377,6 +378,10 @@ func linuxRequireKernel(ctx *checkContext, major, minor int) string {
 
 func linuxSyzCudaSupported(ctx *checkContext, call *prog.Syscall) string {
 	return ctx.rootCanOpen("/dev/nvidiactl")
+}
+
+func linuxSyzGpuInstrumentSupported(ctx *checkContext, call *prog.Syscall) string {
+	return ctx.rootCanOpen("/dev/memory-injector")
 }
 
 var kernelVersionRe = regexp.MustCompile(` ([0-9]+)\.([0-9]+)\.`)
