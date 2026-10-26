@@ -161,7 +161,7 @@ index 9f7de4be..a833aa0f 100644
  CONDITIONAL_CFLAGS += $(call TEST_CC_ARG, -Wformat-overflow=2)
  CONDITIONAL_CFLAGS += $(call TEST_CC_ARG, -Wformat-truncation=1)
 diff --git a/src/nvidia/Makefile b/src/nvidia/Makefile
-index 9abfc7cf..1b7fee73 100644
+index 9abfc7cf..03a75f4a 100644
 --- a/src/nvidia/Makefile
 +++ b/src/nvidia/Makefile
 @@ -75,6 +75,9 @@ CFLAGS += -Wundef
@@ -174,6 +174,19 @@ index 9abfc7cf..1b7fee73 100644
  
  ifeq ($(TARGET_ARCH),x86_64)
    CFLAGS += -msoft-float
+@@ -137,9 +140,9 @@ CFLAGS += -DNV_PRINTF_STRINGS_ALLOWED=1
+ CFLAGS += -DNV_ASSERT_FAILED_USES_STRINGS=1
+ CFLAGS += -DPORT_ASSERT_FAILED_USES_STRINGS=1
+ 
+-ifeq ($(DEBUG),1)
+-  CFLAGS += -gsplit-dwarf
+-endif
++# ifeq ($(DEBUG),1)
++  # CFLAGS += -gsplit-dwarf
++# endif
+ 
+ # Define how to perform dead code elimination: place each symbol in its own
+ # section at compile time, and garbage collect unreachable sections at link
 diff --git a/src/nvidia/exports_link_command.txt b/src/nvidia/exports_link_command.txt
 index 1c434b9c..a7063701 100644
 --- a/src/nvidia/exports_link_command.txt

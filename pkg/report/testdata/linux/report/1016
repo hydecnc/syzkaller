@@ -1,0 +1,13 @@
+TITLE: NVRM: GSP RPC timeout (GPU wedged, VM spent)
+
+[  122.443577][ T8503] NVRM: _kgspLogXid119: ********************************* GSP Timeout **********************************
+[  122.443934][ T8503] NVRM: _kgspLogXid119: Note: Please also check logs above.
+[  122.444215][ T8503] NVRM: GPU at PCI:0000:00:05: GPU-ebcaabd1-394e-e085-7072-0ddfdd89053c
+[  122.444479][ T8503] NVRM: GPU Board Serial Number: 1321722080531
+[  122.444672][ T8503] NVRM: Xid (PCI:0000:00:05): 119, pid=8503, name=syz-executor.0, Timeout after 45s of waiting for RPC response from GPU0 GSP! Expected function 76 (GSP_RM_CONTROL) (0xa06f0112 0x1).
+[  122.445224][ T8503] NVRM: GPU0 GSP RPC buffer contains function 0 (NOP) and data 0x0000000000000000 0x0000000000000000.
+[  122.445566][ T8503] NVRM: GPU0 RPC history (CPU -> GSP):
+[  122.445737][ T8503] NVRM:     entry function                   data0              data1              ts_start           ts_end             duration actively_polling
+[  122.446180][ T8503] NVRM:      0    76   GSP_RM_CONTROL        0x00000000a06f0112 0x0000000000000001 0x0006591ec3972e50 0x0000000000000000          y
+[  122.446591][ T8503] NVRM:     -1    76   GSP_RM_CONTROL        0x0000000000802009 0x0000000000000001 0x0006591ec396cd6a 0x0006591ec396ff49  12767us
+[  122.447004][ T8503] NVRM:     -2    76   GSP_RM_CONTROL        0x00000000a06c0103 0x0000000000000008 0x0006591ec396c220 0x0006591ec396c313    243us

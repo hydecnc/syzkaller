@@ -1,0 +1,3 @@
+TITLE: NVRM: GPU reset required (GPU wedged, VM spent)
+
+[  365.081139][ T8400] NVRM: Xid (PCI:0000:00:04): 154, GPU recovery action changed from 0x0 (None) to 0x1 (PF FLR)

@@ -1,0 +1,13 @@
+TITLE: NVRM: GSP task exception (GPU wedged, VM spent)
+
+#0 [53244ms] -> syz_gpu_insert_buffer(0x20000000, 0xf000, 0x0)
+#0 [53245ms] <- syz_gpu_insert_buffer=0x0 cover=123293
+[ 1740.629623][T21317] NVRM: kgspHealthCheck_TU102: ****************************** GSP-CrashCat Report *******************************
+[ 1740.630035][T21317] NVRM: GPU at PCI:0000:00:05: GPU-ebcaabd1-394e-e085-7072-0ddfdd89053c
+[ 1740.630297][T21317] NVRM: GPU Board Serial Number: 1321722080531
+[ 1740.630488][T21317] NVRM: Xid (PCI:0000:00:05): 120, pid='<unknown>', name=<unknown>, GSP task exception: load access page fault (cause:0xd) @ pc:0x172aeec, partition:2#4, task:3
+[ 1740.630974][T21317] NVRM:     Reported by libos partition:2#4 kernel v3.1 [0] @ ts:1786737712
+[ 1740.631238][T21317] NVRM:     RISC-V CSR State:
+[ 1740.631386][T21317] NVRM:         sstatus:0x0000000200000020  sscratch:0xffffffffa300f450     sie:0x0000000000000220  sip:0x0000000000000000
+[ 1740.631766][T21317] NVRM:            sepc:0x000000000172aeec     stval:0x000000000000013c  scause:0x000000000000000d
+[ 1740.632092][T21317] NVRM:     RISC-V GPR State:
