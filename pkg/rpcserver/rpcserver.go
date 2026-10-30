@@ -182,6 +182,13 @@ func New(cfg *RemoteConfig) (Server, error) {
 	if !cfg.MemoryDump {
 		features &= ^flatrpc.FeatureMemoryDump
 	}
+	for _, name := range cfg.Experimental.DisableFeatures {
+		feat, ok := flatrpc.EnumValuesFeature[name]
+		if !ok {
+			return nil, fmt.Errorf("unknown feature %q in disable_features", name)
+		}
+		features &= ^feat
+	}
 	return newImpl(&Config{
 		Config: vminfo.Config{
 			Target:     cfg.Target,

@@ -270,6 +270,10 @@ type Experimental struct {
 
 	// Enable dynamic discovery and fuzzing of KFuzzTest targets.
 	EnableKFuzzTest bool `json:"enable_kfuzztest"`
+
+	// Features to turn off even if the target supports them, by flatrpc name.
+	// E.g. "disable_features": ["Fault", "Leak"].
+	DisableFeatures []string `json:"disable_features,omitempty"`
 }
 
 type FocusArea struct {
