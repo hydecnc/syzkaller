@@ -87,8 +87,8 @@ if [ "$RELEASE" == "" ]; then
     exit 0
 fi
 
+PARENT_D=$(dirname "$LINUX")
 if [ "$SKIP_BUILD" == "0" ]; then
-    PARENT_D=$(dirname "$LINUX")
     echo "This script will delete all linux-* files in the parent folder(\"$PARENT_D\")."
     echo "Move Linux source folder to a safe 2nd level directory for safety concerns."
 
@@ -114,22 +114,24 @@ if [ "$SKIP_BUILD" == "0" ]; then
     
     check_config "CONFIG_KASAN"
     check_config "CONFIG_KCOV"
+    check_config "CONFIG_KCOV_UNIQUE"
     check_config "CONFIG_KPROBES"
     check_config "CONFIG_DEBUG_INFO"
 
     echo "Building Linux kernel packages"
     sleep 1
     make deb-pkg -j`nproc` || exit_with_error "Building kernel encounters errors"
-
-    sudo mkdir -p /mnt/chroot
-    sudo mount -o loop $IMAGE /mnt/chroot
-    sudo mkdir -p /mnt/chroot/root/linux-deb
-    sudo cp -a ../linux-* /mnt/chroot/root/linux-deb
-    sudo cp -a ./System.map /mnt/chroot/root/linux-deb
-    sudo touch /mnt/chroot/root/.build_gpu/update
-    sudo rm /mnt/chroot/root/.build_gpu/.stamp/BUILD_GPU_MODULES || true
-    sudo umount /mnt/chroot
 fi
+
+cd $LINUX
+sudo mkdir -p /mnt/chroot
+sudo mount -o loop $IMAGE /mnt/chroot
+sudo mkdir -p /mnt/chroot/root/linux-deb
+sudo cp -a ../linux-* /mnt/chroot/root/linux-deb
+sudo cp -a ./System.map /mnt/chroot/root/linux-deb
+sudo touch /mnt/chroot/root/.build_gpu/update
+sudo rm /mnt/chroot/root/.build_gpu/.stamp/BUILD_GPU_MODULES || true
+sudo umount /mnt/chroot
 
 nohup sudo qemu-system-x86_64 -m 8G -smp 8 \
     -net nic,model=e1000 -net user,host=10.0.2.10,hostfwd=tcp::3777-:22 \

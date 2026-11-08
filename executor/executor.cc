@@ -73,6 +73,7 @@ const int kCoverFd = kOutPipeFd - kMaxThreads;
 const int kExtraCoverFd = kCoverFd - 1;
 const int kMaxArgs = 9;
 const int kCoverSize = 512 << 10;
+const int kUniqueBitmapWords = 30 << 10;
 const int kNvidiaCoverSize = 128 << 20;
 const int kNvidiaLargeCoverThreads = 2;
 const int kFailStatus = 67;
@@ -274,6 +275,7 @@ static bool flag_devlink_pci;
 static bool flag_nic_vf;
 static bool flag_vhci_injection;
 static bool flag_wifi;
+static bool flag_unique_coverage;
 static bool flag_nvidia;
 static bool flag_delay_kcov_mmap;
 static bool flag_return_error;
@@ -855,6 +857,7 @@ void parse_handshake(const handshake_req& req)
 	flag_delay_kcov_mmap = (bool)(req.flags & rpc::ExecEnv::DelayKcovMmap);
 	flag_nic_vf = (bool)(req.flags & rpc::ExecEnv::EnableNicVF);
 	flag_nvidia = (bool)(req.flags & rpc::ExecEnv::EnableNvidia);
+	flag_unique_coverage = true; // FIXME: make this a proper option
 	flag_return_error = req.return_error;
 }
 

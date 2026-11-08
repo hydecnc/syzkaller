@@ -87,6 +87,7 @@ struct kcov_remote_arg {
 #define KCOV_ENABLE _IO('c', 100)
 #define KCOV_DISABLE _IO('c', 101)
 #define KCOV_REMOTE_ENABLE _IOW('c', 102, kcov_remote_arg<0>)
+#define KCOV_UNIQUE_ENABLE _IOW('c', 103, unsigned long)
 #define KCOV_RESET_TRACE _IO('c', 104)
 
 #define KCOV_SUBSYSTEM_COMMON (0x00ull << 56)
@@ -165,6 +166,8 @@ static void cover_open(cover_t* cov, bool extra)
 	// Thread i uses fd kCoverFd + i.
 	if (!extra && !flag_snapshot && flag_nvidia && cov->fd - kCoverFd < kNvidiaLargeCoverThreads)
 		cover_size = kNvidiaCoverSize;
+	if (!extra && flag_unique_coverage)
+		cover_size += kUniqueBitmapWords;
 	if (ioctl(cov->fd, kcov_init_trace, cover_size))
 		fail("cover init trace write failed");
 	cov->data_size = cover_size * (is_kernel_64_bit ? 8 : 4);
@@ -239,7 +242,11 @@ static void cover_enable(cover_t* cov, bool collect_comps, bool extra)
 	// but in practice ioctl fails with assorted errors (9, 14, 25),
 	// so we use exitf.
 	if (!extra) {
-		if (ioctl(cov->fd, KCOV_ENABLE, kcov_mode))
+		if (!collect_comps && flag_unique_coverage) {
+			if (ioctl(cov->fd, KCOV_UNIQUE_ENABLE, kUniqueBitmapWords))
+				exitf("cover unique enable write failed, bitmap_size=%d", kUniqueBitmapWords);
+			cov->data_offset = (kUniqueBitmapWords + 1) * (is_kernel_64_bit ? 8 : 4);
+		} else if (ioctl(cov->fd, KCOV_ENABLE, kcov_mode))
 			exitf("cover enable write trace failed, mode=%d", kcov_mode);
 		cov->enabled = true;
 		return;
@@ -272,7 +279,9 @@ static void cover_reset(cover_t* cov)
 			fail("KCOV_RESET_TRACE failed");
 	} else {
 		cover_unprotect(cov);
-		*(uint64*)cov->data = 0;
+		char* trace = cov->data + cov->data_offset - (is_kernel_64_bit ? 8 : 4);
+		memset(cov->data, 0, trace - cov->data); // bitmap; zero bytes in normal mode
+		*(uint64*)trace = 0;
 		cover_protect(cov);
 	}
 	cov->overflow = false;
@@ -281,8 +290,9 @@ static void cover_reset(cover_t* cov)
 template <typename cover_data_t>
 static void cover_collect_impl(cover_t* cov)
 {
-	cov->size = *(cover_data_t*)cov->data;
-	cov->overflow = (cov->data + (cov->size + 2) * sizeof(cover_data_t)) > cov->data_end;
+	char* trace = cov->data + cov->data_offset - sizeof(cover_data_t);
+	cov->size = *(cover_data_t*)trace;
+	cov->overflow = (trace + (cov->size + 2) * sizeof(cover_data_t)) > cov->data_end;
 }
 
 static void cover_collect(cover_t* cov)
