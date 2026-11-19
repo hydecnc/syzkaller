@@ -131,6 +131,24 @@ if [ "$SKIP_BUILD" == "0" ]; then
     sudo umount /mnt/chroot
 fi
 
+if [ "$VENDOR" == "nvidia" ]; then
+    # The linux-headers package ships the host-built objtool, linked against this
+    # host's glibc, which can be newer than the bookworm guest's. Build objtool
+    # against bookworm's glibc; build-nvidia-gpu.sh installs it in the guest.
+    LINUX_ABS=$(realpath $LINUX)
+    if [ "$SKIP_BUILD" == "0" ] || [ ! -f "$LINUX_ABS/objtool.bookworm" ]; then
+        docker run --rm -v $LINUX_ABS:/src debian:bookworm bash -c \
+            "set -e; apt-get update && apt-get install -y gcc make libelf-dev pkg-config && \
+             mkdir -p /tmp/o && make -C /src/tools/objtool O=/tmp/o && cp /tmp/o/objtool /src/objtool.bookworm" \
+            || exit_with_error "Building objtool for the guest has failed"
+    fi
+    sudo mkdir -p /mnt/chroot
+    sudo mount -o loop $IMAGE /mnt/chroot
+    sudo mkdir -p /mnt/chroot/root/linux-deb
+    sudo cp $LINUX_ABS/objtool.bookworm /mnt/chroot/root/linux-deb/objtool.bookworm
+    sudo umount /mnt/chroot
+fi
+
 nohup sudo qemu-system-x86_64 -m 8G -smp 8 \
     -net nic,model=e1000 -net user,host=10.0.2.10,hostfwd=tcp::3777-:22 \
     -display none -serial stdio -no-reboot \

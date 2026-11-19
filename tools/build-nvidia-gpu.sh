@@ -11,6 +11,27 @@ function exit_with_error() {
     exit 1
 }
 
+# The linux-headers package ships host tools (objtool, modpost) that were built
+# on the kernel build host and linked against its glibc, which may be newer than
+# this guest's. Replace them with copies built against the guest's glibc.
+function fix_kernel_host_tools() {
+    KBUILD_DIR=/lib/modules/`uname -r`/build
+
+    # objtool's source is not in the headers package; build-kernel.sh builds it
+    # in a debian:bookworm container and drops it here.
+    if [ -f /root/linux-deb/objtool.bookworm ] && [ -f $KBUILD_DIR/tools/objtool/objtool ]; then
+        cp /root/linux-deb/objtool.bookworm $KBUILD_DIR/tools/objtool/objtool
+    fi
+    if [ -f $KBUILD_DIR/tools/objtool/objtool ] && $KBUILD_DIR/tools/objtool/objtool 2>&1 | grep -q 'GLIBC_'; then
+        exit_with_error "objtool in $KBUILD_DIR needs a newer glibc; re-run deploy so build-kernel.sh provides objtool.bookworm"
+    fi
+
+    # modpost's source is in the headers package, so rebuild it in place.
+    MODPOST_SRCS=$(ls $KBUILD_DIR/scripts/mod/*.c | grep -vE '/(empty|mk_elfconfig|devicetable-offsets)\.c$')
+    gcc -O2 -std=gnu11 -I $KBUILD_DIR/scripts/include -o $KBUILD_DIR/scripts/mod/modpost $MODPOST_SRCS \
+        || exit_with_error "Rebuilding modpost has failed"
+}
+
 CUDA_VERSION="12.6.1"
 GPU_MODULE_VERSION="560.35.03"
 
@@ -59,6 +80,7 @@ if [ ! -f "/root/.build_gpu/.stamp/BUILD_GPU_MODULES" ]; then
     make clean
     cp /root/.build_gpu/gpu_module.patch ./
     patch -p1 -i ./gpu_module.patch || exit_with_error "Cannot apply patch to GPU modules"
+    fix_kernel_host_tools
     if [ -z "$FLAG_PANIC_ON_ASSERT" ]; then
         make modules DEBUG=1 -j`nproc` || exit_with_error "Compiling GPU modules has failed"
     else
