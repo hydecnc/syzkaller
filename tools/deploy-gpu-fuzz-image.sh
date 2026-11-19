@@ -169,6 +169,13 @@ EOF
     touch $IMAGE/.stamp/GUEST_SCRIPT_READY
 else
     echo "Found $IMAGE/.stamp/GUEST_SCRIPT_READY"
+    # Refresh the guest build script so fixes to it reach existing images.
+    cd $HOME_DIR
+    sudo mkdir -p /mnt/chroot
+    sudo mount -o loop $IMAGE/$RELEASE.img /mnt/chroot
+    sudo cp $SYZ_TOOLS/build-$VENDOR-gpu.sh /mnt/chroot/root/.build_gpu
+    sudo chmod +x /mnt/chroot/root/.build_gpu/build-$VENDOR-gpu.sh
+    sudo umount /mnt/chroot
 fi
 
 if [ "$REBUILD_MEMORY_INJECTOR" != "" ]; then
