@@ -4,19 +4,20 @@
 #include "gpu_instrumentation/gpu_instrumentation.h"
 #include <cuda.h>
 
-#define CUDA_API(func, args_with_types, args)      \
-	static CUresult syz_##func args_with_types \
-	{                                          \
-		return func args;                  \
+// Wrappers may be unreferenced depending on which description set is in sys/linux.
+#define CUDA_API(func, args_with_types, args)                              \
+	static __attribute__((unused)) CUresult syz_##func args_with_types \
+	{                                                                  \
+		return func args;                                          \
 	}
 
 #define kNvidiaMaxHostBytes (64 << 20)
-#define CUDA_API_CAPPED(func, args_with_types, args, size) \
-	static CUresult syz_##func args_with_types         \
-	{                                                  \
-		if ((size) > kNvidiaMaxHostBytes)          \
-			return CUDA_ERROR_INVALID_VALUE;   \
-		return func args;                          \
+#define CUDA_API_CAPPED(func, args_with_types, args, size)                 \
+	static __attribute__((unused)) CUresult syz_##func args_with_types \
+	{                                                                  \
+		if ((size) > kNvidiaMaxHostBytes)                          \
+			return CUDA_ERROR_INVALID_VALUE;                   \
+		return func args;                                          \
 	}
 #else
 
@@ -827,6 +828,57 @@ CUDA_API(cuMulticastGetGranularity, (size_t* granularity, const CUmulticastObjec
 
 #if SYZ_EXECUTOR || __NR_syz_cuMulticastUnbind
 CUDA_API(cuMulticastUnbind, (CUmemGenericAllocationHandle mcHandle, int dev, size_t mcOffset, size_t size), (mcHandle, dev, mcOffset, size))
+#endif
+
+// Pre-CUDA-13 functions used by the original StepStone descriptions.
+#if SYZ_EXECUTOR_NVIDIA && CUDA_VERSION < 13000
+#if SYZ_EXECUTOR || __NR_syz_cuCtxCreate
+CUDA_API(cuCtxCreate, (CUcontext * pctx, unsigned int flags, int dev), (pctx, flags, dev))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuCtxCreate_v3
+CUDA_API(cuCtxCreate_v3, (CUcontext * pctx, CUexecAffinityParam* paramsArray, int numParams, unsigned int flags, int dev), (pctx, paramsArray, numParams, flags, dev))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuDeviceGetUuid
+CUDA_API(cuDeviceGetUuid, (CUuuid * uuid, int dev), (uuid, dev))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuMemAdvise
+CUDA_API(cuMemAdvise, (CUdeviceptr devPtr, size_t count, CUmem_advise advice, int device), (devPtr, count, advice, device))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuMemPrefetchAsync
+CUDA_API_CAPPED(cuMemPrefetchAsync, (CUdeviceptr devPtr, size_t count, int dstDevice, CUstream hStream), (devPtr, count, dstDevice, hStream), count)
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuStreamGetCaptureInfo
+CUDA_API(cuStreamGetCaptureInfo, (CUstream hStream, CUstreamCaptureStatus* captureStatus_out, cuuint64_t* id_out, CUgraph* graph_out, const CUgraphNode** dependencies_out, size_t* numDependencies_out), (hStream, captureStatus_out, id_out, graph_out, dependencies_out, numDependencies_out))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuStreamUpdateCaptureDependencies
+CUDA_API(cuStreamUpdateCaptureDependencies, (CUstream hStream, CUgraphNode* dependencies, size_t numDependencies, unsigned int flags), (hStream, dependencies, numDependencies, flags))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuGraphAddDependencies
+CUDA_API(cuGraphAddDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, numDependencies))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuGraphRemoveDependencies
+CUDA_API(cuGraphRemoveDependencies, (CUgraph hGraph, const CUgraphNode* from, const CUgraphNode* to, size_t numDependencies), (hGraph, from, to, numDependencies))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuGraphGetEdges
+CUDA_API(cuGraphGetEdges, (CUgraph hGraph, CUgraphNode* from, CUgraphNode* to, size_t* numEdges), (hGraph, from, to, numEdges))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependencies
+CUDA_API(cuGraphNodeGetDependencies, (CUgraphNode hNode, CUgraphNode* dependencies, size_t* numDependencies), (hNode, dependencies, numDependencies))
+#endif
+
+#if SYZ_EXECUTOR || __NR_syz_cuGraphNodeGetDependentNodes
+CUDA_API(cuGraphNodeGetDependentNodes, (CUgraphNode hNode, CUgraphNode* dependentNodes, size_t* numDependentNodes), (hNode, dependentNodes, numDependentNodes))
+#endif
 #endif
 
 // Unified addressing management

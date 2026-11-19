@@ -74,7 +74,7 @@ if [ ! -f "/root/.build_gpu/.stamp/INSTALL_GPU_DRIVER" ]; then
     chmod +x NVIDIA-Linux-x86_64-$GPU_MODULE_VERSION.run
     sh ./NVIDIA-Linux-x86_64-$GPU_MODULE_VERSION.run -s --no-kernel-modules || exit_with_error "Installing GPU drivers has failed"
 
-    wget -nv https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb
+    wget -nv https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
     dpkg -i cuda-keyring_1.1-1_all.deb
     apt-get update
     apt-get -y install cuda-toolkit-$VERSION_MAJOR-$VERSION_MINOR
