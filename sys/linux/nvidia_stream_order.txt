@@ -4,7 +4,7 @@ include <cuda.h>
 # resource handle[intptr]
 
 # Enum Definition
-CUmemPool_attribute = CU_MEMPOOL_ATTR_REUSE_FOLLOW_EVENT_DEPENDENCIES, CU_MEMPOOL_ATTR_REUSE_ALLOW_OPPORTUNISTIC, CU_MEMPOOL_ATTR_REUSE_ALLOW_INTERNAL_DEPENDENCIES, CU_MEMPOOL_ATTR_RELEASE_THRESHOLD, CU_MEMPOOL_ATTR_RESERVED_MEM_CURRENT, CU_MEMPOOL_ATTR_RESERVED_MEM_HIGH, CU_MEMPOOL_ATTR_USED_MEM_CURRENT, CU_MEMPOOL_ATTR_USED_MEM_HIGH, CU_MEMPOOL_ATTR_ALLOCATION_TYPE, CU_MEMPOOL_ATTR_EXPORT_HANDLE_TYPES, CU_MEMPOOL_ATTR_LOCATION_ID, CU_MEMPOOL_ATTR_LOCATION_TYPE, CU_MEMPOOL_ATTR_MAX_POOL_SIZE, CU_MEMPOOL_ATTR_HW_DECOMPRESS_ENABLED, CU_MEMPOOL_ATTR_LOCALITY_DOMAIN_ID
+CUmemPool_attribute = CU_MEMPOOL_ATTR_REUSE_FOLLOW_EVENT_DEPENDENCIES, CU_MEMPOOL_ATTR_REUSE_ALLOW_OPPORTUNISTIC, CU_MEMPOOL_ATTR_REUSE_ALLOW_INTERNAL_DEPENDENCIES, CU_MEMPOOL_ATTR_RELEASE_THRESHOLD, CU_MEMPOOL_ATTR_RESERVED_MEM_CURRENT, CU_MEMPOOL_ATTR_RESERVED_MEM_HIGH, CU_MEMPOOL_ATTR_USED_MEM_CURRENT, CU_MEMPOOL_ATTR_USED_MEM_HIGH
 
 # Structure Definition
 CUmemPoolProps {
@@ -14,8 +14,7 @@ CUmemPoolProps {
 	win32SecurityAttributes	ptr[in, void]
 	maxSize			int64
 	usage			int16
-	gpuDirectRDMACapable	int8
-	reserved		array[int8, 53]
+	reserved		array[int8, 54]
 }
 
 CUmemPoolPtrExportData {
@@ -27,8 +26,8 @@ type CUmemPoolGetAttribute_value_int int32
 type CUmemPoolGetAttribute_value_cuuint64_t int64
 
 # API Definition
-syz_cuMemAllocAsync(dptr ptr[out, CUdeviceptr], bytesize intptr, hStream CUstream)
-syz_cuMemAllocFromPoolAsync(dptr ptr[out, CUdeviceptr], bytesize nv_host_bytes, pool CUmemoryPool, hStream CUstream)
+syz_cuMemAllocAsync(dptr ptr[out, CUdeviceptr], bytesize int32, hStream CUstream)
+syz_cuMemAllocFromPoolAsync(dptr ptr[out, CUdeviceptr], bytesize int32, pool CUmemoryPool, hStream CUstream)
 syz_cuMemFreeAsync(dptr CUdeviceptr, hStream CUstream)
 syz_cuMemPoolCreate(pool ptr[out, CUmemoryPool], poolProps ptr[in, CUmemPoolProps])
 syz_cuMemPoolDestroy(pool CUmemoryPool)
@@ -41,4 +40,4 @@ syz_cuMemPoolGetAttribute$2(pool CUmemoryPool, attr flags[CUmemPool_attribute], 
 syz_cuMemPoolImportPointer(ptr_out ptr[out, CUdeviceptr], pool CUmemoryPool, shareData ptr[in, CUmemPoolPtrExportData])
 syz_cuMemPoolSetAccess(pool CUmemoryPool, map ptr[in, array[CUmemAccessDesc]], count len[map])
 syz_cuMemPoolSetAttribute(pool CUmemoryPool, attr flags[CUmemPool_attribute], value ptr[in, void])
-syz_cuMemPoolTrimTo(pool CUmemoryPool, minBytesToKeep intptr)
+syz_cuMemPoolTrimTo(pool CUmemoryPool, minBytesToKeep int32)

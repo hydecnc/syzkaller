@@ -11,8 +11,8 @@ function exit_with_error() {
     exit 1
 }
 
-CUDA_VERSION="13.4.2"
-GPU_MODULE_VERSION="615.71.09"
+CUDA_VERSION="12.6.1"
+GPU_MODULE_VERSION="560.35.03"
 
 version=$(echo $CUDA_VERSION | grep -o '[^-]*$')
 VERSION_MAJOR=$(echo $version | cut -d. -f1)

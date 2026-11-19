@@ -166,7 +166,7 @@ else
 		executor/executor.cc $(GPU_INSTRUMENTATION_SRCS) \
 		$(CFLAGS) -DGOOS_$(TARGETOS)=1 -DGOARCH_$(TARGETARCH)=1 \
 		-DHOSTGOOS_$(HOSTOS)=1 -DGIT_REVISION=\"$(REV)\" -DSYZ_EXECUTOR=1 -DSYZ_EXECUTOR_NVIDIA=1 \
-		-I/usr/local/cuda-13.4/include -lcuda -L/usr/local/cuda/lib64/stubs -lstdc++
+		-I/usr/local/cuda-12.6/include -lcuda -L/usr/local/cuda/lib64/stubs -lstdc++
 endif
 endif
 endif
