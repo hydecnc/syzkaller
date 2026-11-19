@@ -75,7 +75,7 @@ else
 fi
 
 if [ "$VENDOR" == "nvidia" ]; then
-    RELEASE=trixie
+    RELEASE=bookworm
 fi
 
 if [ "$VENDOR" == "amd" ]; then
