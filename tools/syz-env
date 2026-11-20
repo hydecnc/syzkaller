@@ -79,8 +79,12 @@ if [ ! -z "$SYZ_ENV_BUILD" ]; then
 	IMAGE_NAME="syz-$IMAGE"
 	docker build "$SCRIPT_DIR/docker/$IMAGE" --tag "$IMAGE_NAME" ${BUILDARGS[@]}
 else
-	IMAGE_NAME="syz-nvidia-env:$(sha256sum "$SCRIPT_DIR/docker/nvidia-env/Dockerfile" | cut -c1-12)"
-	docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/nvidia-env" || exit 1
+	NVIDIA_IMAGE="nvidia-env"
+	if [ "$(basename -- "$0")" == "syz-bookworm-env" ]; then
+		NVIDIA_IMAGE="nvidia-bookworm-env"
+	fi
+	IMAGE_NAME="syz-$NVIDIA_IMAGE:$(sha256sum "$SCRIPT_DIR/docker/$NVIDIA_IMAGE/Dockerfile" | cut -c1-12)"
+	docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/$NVIDIA_IMAGE" || exit 1
 fi
 
 GITDIR="$(git -C "$SCRIPT_DIR/.." rev-parse --absolute-git-dir 2>/dev/null || true)"
