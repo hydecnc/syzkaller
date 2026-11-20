@@ -79,8 +79,8 @@ if [ ! -z "$SYZ_ENV_BUILD" ]; then
 	IMAGE_NAME="syz-$IMAGE"
 	docker build "$SCRIPT_DIR/docker/$IMAGE" --tag "$IMAGE_NAME" ${BUILDARGS[@]}
 else
-	IMAGE_NAME="syz-nvidia-env"
-  docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/nvidia-env"
+	IMAGE_NAME="syz-nvidia-env:$(sha256sum "$SCRIPT_DIR/docker/nvidia-env/Dockerfile" | cut -c1-12)"
+	docker image inspect "$IMAGE_NAME" >/dev/null 2>&1 || docker build -t "$IMAGE_NAME" "$SCRIPT_DIR/docker/nvidia-env" || exit 1
 fi
 
 GITDIR="$(git -C "$SCRIPT_DIR/.." rev-parse --absolute-git-dir 2>/dev/null || true)"

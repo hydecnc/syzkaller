@@ -10,9 +10,11 @@ RUN apt-get update \
   && dpkg -i cuda-keyring_${CUDA_KEYRING_VERSION}_all.deb \
   && rm cuda-keyring_${CUDA_KEYRING_VERSION}_all.deb \
   && apt-get update -o APT::Key::GPGVCommand=/usr/bin/gpgv \
-  && apt-get install -y --no-install-recommends cuda-toolkit-${CUDA_VERSION} \
+  && apt-get install -y --no-install-recommends --no-remove cuda-toolkit-${CUDA_VERSION} \
   && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/usr/local/cuda/bin:${PATH}"
 ENV CPATH="/usr/local/cuda/include:${CPATH}"
 ENV LIBRARY_PATH="/usr/local/cuda/lib64/stubs:${LIBRARY_PATH}"
+
+RUN clang-format --version && flatc --version && nvcc --version
