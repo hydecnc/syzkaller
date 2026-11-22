@@ -96,6 +96,19 @@ index 423414af..c571f849 100644
  
  ifeq ($(TARGET_ARCH),x86_64)
    CFLAGS += -msoft-float
+@@ -137,9 +140,9 @@ CFLAGS += -DNV_PRINTF_STRINGS_ALLOWED=1
+ CFLAGS += -DNV_ASSERT_FAILED_USES_STRINGS=1
+ CFLAGS += -DPORT_ASSERT_FAILED_USES_STRINGS=1
+
+-ifeq ($(DEBUG),1)
+-  CFLAGS += -gsplit-dwarf
+-endif
++# ifeq ($(DEBUG),1)
++  # CFLAGS += -gsplit-dwarf
++# endif
+
+ # Define how to perform dead code elimination: place each symbol in its own
+ # section at compile time, and garbage collect unreachable sections at link
 diff --git a/src/nvidia/inc/libraries/utils/nvassert.h b/src/nvidia/inc/libraries/utils/nvassert.h
 index 68cee83b..6754e0c7 100644
 --- a/src/nvidia/inc/libraries/utils/nvassert.h

@@ -388,6 +388,7 @@ func readTextRanges(debugInfo *dwarf.Data, module *vminfo.KernelModule, pcFix pc
 		}
 	}
 
+	skeletons := 0
 	for r := debugInfo.Reader(); ; {
 		ent, err := r.Next()
 		if err != nil {
@@ -395,6 +396,13 @@ func readTextRanges(debugInfo *dwarf.Data, module *vminfo.KernelModule, pcFix pc
 		}
 		if ent == nil {
 			break
+		}
+		if ent.Tag == dwarf.TagSkeletonUnit {
+			// Split-DWARF (-gsplit-dwarf) skeleton: no DW_AT_name, the real unit
+			// lives in a .dwo file that we don't have.
+			skeletons++
+			r.SkipChildren()
+			continue
 		}
 		if ent.Tag != dwarf.TagCompileUnit {
 			return nil, nil, fmt.Errorf("found unexpected tag %v on top level", ent.Tag)
@@ -431,6 +439,10 @@ func readTextRanges(debugInfo *dwarf.Data, module *vminfo.KernelModule, pcFix pc
 			}
 		}
 		r.SkipChildren()
+	}
+	if skeletons != 0 {
+		log.Logf(0, "module %q: skipped %v split-DWARF skeleton units, their PCs have no source info",
+			module.Name, skeletons)
 	}
 	var units []*CompileUnit
 	for _, unit := range unitMap {
