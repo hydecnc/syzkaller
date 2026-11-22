@@ -4538,6 +4538,12 @@ static void sandbox_common()
 	if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL)) {
 		debug("mount(\"/\", MS_REC | MS_PRIVATE): %d\n", errno);
 	}
+#if SYZ_EXECUTOR
+	// Without the tmpfs root, /proc still belongs to the parent pid namespace, and cuInit fails with 304.
+	if (flag_nvidia && mount("proc", "/proc", "proc", 0, NULL)) {
+		debug("mount(\"/proc\"): %d\n", errno);
+	}
+#endif
 	if (unshare(CLONE_NEWIPC)) {
 		debug("unshare(CLONE_NEWIPC): %d\n", errno);
 	}
